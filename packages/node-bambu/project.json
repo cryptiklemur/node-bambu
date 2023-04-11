@@ -1,0 +1,26 @@
+{
+  "name": "node-bambu",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/node-bambu/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:swc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/node-bambu",
+        "main": "packages/node-bambu/src/index.ts",
+        "tsConfig": "packages/node-bambu/tsconfig.lib.json",
+        "assets": ["packages/node-bambu/*.md"]
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["packages/node-bambu/**/*.ts"]
+      }
+    }
+  },
+  "tags": []
+}

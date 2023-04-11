@@ -14,7 +14,10 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "@node-bambu/discord-bambu": ["packages/discord-bambu/src/index.ts"],
+      "@node-bambu/node-bambu": ["packages/node-bambu/src/index.ts"]
+    }
   },
   "exclude": ["node_modules", "tmp"]
 }

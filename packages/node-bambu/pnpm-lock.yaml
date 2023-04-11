@@ -1,0 +1,12 @@
+lockfileVersion: '6.0'
+
+dependencies:
+  eventemitter3:
+    specifier: ^5.0.0
+    version: 5.0.0
+
+packages:
+
+  /eventemitter3@5.0.0:
+    resolution: {integrity: sha512-riuVbElZZNXLeLEoprfNYoDSwTBRR44X3mnhdI1YcnENpWTCsTTVZ2zFuqQcpoyqPQIUXdiPEU0ECAq0KQRaHg==}
+    dev: false

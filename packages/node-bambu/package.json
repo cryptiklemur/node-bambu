@@ -1,8 +1,0 @@
-{
-  "name": "@node-bambu/node-bambu",
-  "version": "0.0.1",
-  "type": "commonjs",
-  "dependencies": {
-    "eventemitter3": "^5.0.0"
-  }
-}

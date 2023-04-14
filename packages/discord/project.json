@@ -1,0 +1,26 @@
+{
+  "name": "@node-bambu/discord",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/discord/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:swc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/discord",
+        "main": "packages/discord/src/index.ts",
+        "tsConfig": "packages/discord/tsconfig.lib.json",
+        "assets": ["packages/discord/*.md"]
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["packages/discord/**/*.ts"]
+      }
+    }
+  },
+  "tags": []
+}

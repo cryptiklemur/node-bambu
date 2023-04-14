@@ -1,24 +1,25 @@
 {
-  "name": "node-bambu",
+  "name": "@node-bambu/core",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "packages/node-bambu/src",
+  "sourceRoot": "packages/core/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/js:swc",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "dist/packages/node-bambu",
-        "main": "packages/node-bambu/src/index.ts",
-        "tsConfig": "packages/node-bambu/tsconfig.lib.json",
-        "assets": ["packages/node-bambu/*.md"]
+        "outputPath": "dist/packages/core",
+        "main": "packages/core/src/index.ts",
+        "tsConfig": "packages/core/tsconfig.lib.json",
+        "assets": ["packages/core/*.md"],
+        "generateLockfile": true
       }
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["packages/node-bambu/**/*.ts"]
+        "lintFilePatterns": ["packages/core/**/*.ts"]
       }
     }
   },

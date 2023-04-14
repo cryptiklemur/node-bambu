@@ -1,4 +1,5 @@
-// @todo Improve these types. Lots of these should be enums. Need to figure out what the values are, and what they mean
+import {PrintMessageCommand} from "./PrintMessage";
+import {IntRange, StringNum, StringRange} from "../../../types";
 
 export interface AMSTray {
   bed_temp: string;
@@ -30,15 +31,15 @@ export interface AMS {
 
 export interface AMSStatus {
   ams: AMS[]
-  amx_exist_bits: string;
+  amx_exist_bits: StringNum;
   insert_flag: boolean;
   power_on_flag: boolean;
-  tray_exist_bits: string;
-  tray_is_bbl_bits: string;
-  tray_now: string;
-  tray_read_done_bits: string;
-  tray_reading_bits: string;
-  tray_tar: string;
+  tray_exist_bits: StringNum;
+  tray_is_bbl_bits: StringNum;
+  tray_now: StringNum;
+  tray_read_done_bits: StringNum;
+  tray_reading_bits: StringNum;
+  tray_tar: StringNum;
   version: number;
 }
 
@@ -47,9 +48,14 @@ export interface LightReport {
   node: 'chamber_light' | 'work_light' | string;
 }
 
-export interface PushStatus {
+export interface HMS {
+  attr: number;
+  code: number;
+}
+
+export interface PushStatusCommand extends PrintMessageCommand {
   ams: AMSStatus;
-  ams_rfid_status: number;
+  ams_rfid_status: 0 | 2;
   ams_status: number;
   bed_target_temper: number;
   bed_temper: number;
@@ -61,12 +67,12 @@ export interface PushStatus {
   fail_reason: StringNum;
   fan_gear: number;
   force_upgrade: boolean;
-  gcode_file: string;
+  gcode_file: `${string}.gcode`;
   gcode_file_prepare_percent: StringRange<0, 100>;
   gcode_start_time: StringNum;
-  gcode_state: 'RUNNING' | 'FINISH' | string;
+  gcode_state: 'PREPARE' | 'RUNNING' | 'PAUSE' | 'FINISH';
   heatbreak_fan_speed: StringRange<0, 100>;
-  hms: unknown[];
+  hms: HMS[];
   home_flag: number;
   hw_switch_state: number;
   ipcam: {
@@ -76,12 +82,12 @@ export interface PushStatus {
     timelapse: 'enable' | 'disable';
   };
   layer_num: number;
-  lifecycle: 'product' | string;
+  lifecycle: 'product';
   lights_report: LightReport[];
   maintain: number;
-  mc_percent: IntRange<0 , 100>;
+  mc_percent: IntRange<0, 100>;
   mc_print_error_code: '0' | StringNum;
-  mc_print_stage: '0' | '1' | '2' | '3' | StringNum;
+  mc_print_stage: '1' | '2' | '3';
   mc_print_sub_stage: number;
   mc_remaining_time: number;
   mess_production_state: 'active' | 'inactive';
@@ -91,7 +97,7 @@ export interface PushStatus {
   print_error: number;
   print_gcode_action: number;
   print_real_action: number;
-  print_type: 'cloud' | string;
+  print_type: 'cloud' | 'system' | 'local';
   profile_id: StringNum;
   project_id: StringNum;
   sdcard: boolean;
@@ -116,7 +122,8 @@ export interface UpgradeState {
   ams_new_version_number: string;
   consistency_request: boolean;
   dis_state: number;
-  force_upgrade: boolean;message: string;
+  force_upgrade: boolean;
+  message: string;
   module: 'null' | string;
   new_version_state: number;
   ota_new_version_number: string;
@@ -147,4 +154,8 @@ export interface XCam {
   print_halt: boolean;
   printing_monitor: boolean;
   spaghetti_detector: boolean;
+}
+
+export function isPushStatusCommand(data: PrintMessageCommand): data is PushStatusCommand {
+  return data.command === 'push_status';
 }

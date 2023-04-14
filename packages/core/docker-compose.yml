@@ -1,0 +1,23 @@
+version: '3'
+services:
+  mongo:
+    platform: linux/x86_64
+    image: 'mongo:4.4'
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: node-bambu
+    ports:
+      - '27017:27017'
+    volumes:
+      - 'mongo_data_container:/data/db'
+  redis:
+    image: 'redis:alpine'
+    ports:
+      - '6379:6379'
+    volumes:
+      - 'redis_data_container:/data/db'
+volumes:
+  mongo_data_container: null
+  redis_data_container: null

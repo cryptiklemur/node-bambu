@@ -1,7 +1,10 @@
 {
   "name": "@node-bambu/core",
   "packageManager": "yarn@3.5.0",
+  "version": "0.5.0",
+  "license": "MIT",
   "dependencies": {
+    "basic-ftp": "^5.0.2",
     "cache-manager": "^5.2.0",
     "debug": "^4.3.4",
     "eventemitter3": "^5.0.0",

@@ -1,7 +1,16 @@
-import {ActivityOptions, ActivityType, Client, GatewayDispatchEvents, PresenceStatusData} from "discord.js";
-import {GatewayServer, SlashCreator} from "slash-create";
-import equal from 'fast-deep-equal';
-import {BambuClient, BambuConfig} from "@node-bambu/core";
+import {
+  ActivityOptions,
+  ActivityType,
+  Client,
+  GatewayDispatchEvents,
+  PresenceStatusData,
+} from 'discord.js';
+import { GatewayServer, SlashCreator } from 'slash-create';
+import { BambuClient, BambuConfig } from '@node-bambu/core';
+import prettyMs from 'pretty-ms';
+
+import { StatusCommand } from './Commands/StatusCommand';
+import { PermanentStatusCommand } from './Commands/PermanentStatusCommand';
 
 export interface BambuBotConfiguration {
   discord: {
@@ -9,16 +18,17 @@ export interface BambuBotConfiguration {
     clientId: string;
     publicKey: string;
   };
-  printer: BambuConfig
+  printer: BambuConfig;
+  streamUrl?: string;
 }
 
 export class BambuBot {
-  protected client: Client<boolean>;
-  protected creator: SlashCreator;
-  protected bambu: BambuClient;
+  public readonly client: Client<boolean>;
+  public readonly creator: SlashCreator;
+  public readonly bambu: BambuClient;
 
   public constructor(private config: BambuBotConfiguration) {
-    this.client = new Client({intents: []});
+    this.client = new Client({ intents: [] });
     this.creator = new SlashCreator({
       applicationID: config.discord.clientId,
       publicKey: config.discord.publicKey,
@@ -27,23 +37,48 @@ export class BambuBot {
     });
     this.bambu = new BambuClient(this.config.printer);
 
-    this.creator.withServer(new GatewayServer(
-      (handler) => this.client.ws.on(GatewayDispatchEvents.IntegrationCreate, handler)
-    ))
-      .registerCommands([])
+    this.creator
+      .withServer(
+        new GatewayServer((handler) =>
+          this.client.ws.on(GatewayDispatchEvents.InteractionCreate, handler)
+        )
+      )
+      .registerCommands([
+        new StatusCommand(this.creator, this.bambu),
+        new PermanentStatusCommand(this.creator, this.bambu),
+      ])
       .syncCommands();
-
   }
 
   public async start() {
     await this.bambu.connect();
     await this.client.login(this.config.discord.token);
+    this.bambu.on(
+      'command:gcode_file',
+      console.log.bind(console, 'command:gcode_file')
+    );
+    this.bambu.on(
+      'command:gcode_line',
+      console.log.bind(console, 'command:gcode_line')
+    );
+    this.bambu.on(
+      'command:project_file',
+      console.log.bind(console, 'command:project_file')
+    );
     this.bambu.on('status', (printerStatus) => {
-      const idle = printerStatus.gcodeState === 'IDLE';
+      const idle = printerStatus.state === 'IDLE';
       const status: PresenceStatusData = idle ? 'idle' : 'online';
       const activities: ActivityOptions[] = [];
       if (!idle) {
-        activities.push({name: `${printerStatus.progressPercent}% (${printerStatus.remainingTime}m Remaining)`, type: ActivityType.Watching})
+        activities.push({
+          name: `${printerStatus.progressPercent}% (${prettyMs(
+            printerStatus.remainingTime
+          )} Remaining)`,
+          type: this.config.streamUrl
+            ? ActivityType.Streaming
+            : ActivityType.Watching,
+          url: this.config.streamUrl,
+        });
       }
 
       let changed = false;
@@ -56,13 +91,13 @@ export class BambuBot {
       }
 
       if (changed) {
-        console.log('New Status', {status, activities});
+        console.log('New Status', { status, activities });
         this.client.user?.setPresence({
           status,
-          activities
-        })
+          activities,
+        });
       }
-    })
+    });
   }
 
   private areActivitiesEqual(activities: ActivityOptions[]) {
@@ -71,7 +106,7 @@ export class BambuBot {
     }
 
     for (let i = 0; i < activities.length; i++) {
-      const activity = this.client.user?.presence.activities[0]
+      const activity = this.client.user?.presence.activities[0];
       if (activities[i].name !== activity.name) {
         return false;
       }

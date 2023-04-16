@@ -1,15 +1,18 @@
-import {Status} from "./Status";
-import * as mqtt from "mqtt";
-import {GetVersionCommand} from "./MQTTPacketResponse/info";
+import * as mqtt from 'mqtt';
+
+import { Status } from './Status';
+import { GetVersionCommand } from './MQTTPacketResponse/info';
 import {
   GCodeFileCommand,
   GCodeLineCommand,
   ProjectFileCommand,
   PushStatusCommand,
-  ResumeCommand
-} from "./MQTTPacketResponse/print";
-import {CleanPushInfoCommand, PushInfoCommand} from "./MQTTPacketResponse/mc_print";
-
+  ResumeCommand,
+} from './MQTTPacketResponse/print';
+import {
+  CleanPushInfoCommand,
+  PushInfoCommand,
+} from './MQTTPacketResponse/mc_print';
 
 export interface BambuClientEvents {
   // status(status: Status): void;
@@ -29,4 +32,5 @@ export interface BambuClientEvents {
   'command:project_file': [data: ProjectFileCommand];
   'command:push_info': [data: PushInfoCommand];
   'command:push_info:clean': [data: CleanPushInfoCommand];
+  'ftp:debug': [message: string];
 }

@@ -102,7 +102,7 @@ export interface PushStatusCommand extends PrintMessageCommand {
   project_id: StringNum;
   sdcard: boolean;
   sequence_id: StringNum;
-  spd_lvl: number;
+  spd_lvl: IntRange<1, 4>;
   spd_mag: number;
   stage: number[];
   stg_cur: number;

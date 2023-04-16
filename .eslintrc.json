@@ -1,11 +1,129 @@
 {
   "root": true,
-  "extends": ["prettier"],
-  "ignorePatterns": ["**/*"],
-  "plugins": ["@nrwl/nx"],
+  "extends": [
+    "prettier",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:import/errors",
+    "plugin:import/warnings",
+    "plugin:import/typescript"
+  ],
+  "ignorePatterns": [
+    "**/*"
+  ],
+  "plugins": [
+    "@nrwl/nx",
+    "import"
+  ],
+  "rules": {
+    "@typescript-eslint/explicit-member-accessibility": [
+      "error"
+    ],
+    "@typescript-eslint/explicit-function-return-type": [
+      "error"
+    ],
+    "@typescript-eslint/no-object-literal-type-assertion": "off",
+    "@typescript-eslint/indent": [
+      "error",
+      2,
+      {
+        "flatTernaryExpressions": true,
+        "SwitchCase": 1
+      }
+    ],
+    "import/export": "off",
+    "comma-dangle": [
+      2,
+      "always-multiline"
+    ],
+    "import/named": "off",
+    "react/prop-types": "off",
+    "react/display-name": "off",
+    "react/react-in-jsx-scope": "off",
+    "react/no-unescaped-entities": "off",
+    "import/no-default-export": "error",
+    "import/extensions": [
+      "error",
+      "ignorePackages",
+      {
+        "js": "never",
+        "jsx": "never",
+        "ts": "never",
+        "tsx": "never"
+      }
+    ],
+    "import/no-unresolved": [
+      2,
+      {
+        "commonjs": true,
+        "amd": true,
+        "caseSensitive": true
+      }
+    ],
+    "import/order": [
+      "error",
+      {
+        "newlines-between": "always",
+        "groups": [
+          "builtin",
+          "external",
+          [
+            "internal",
+            "parent",
+            "sibling",
+            "index"
+          ]
+        ],
+        "pathGroups": [
+          {
+            "pattern": "@autofidev/**",
+            "group": "external",
+            "position": "after"
+          },
+          {
+            "pattern": "~*/**",
+            "group": "internal",
+            "position": "before"
+          }
+        ],
+        /* This will make the @autofidev packages sort right after the other 'external' imports. */
+        "pathGroupsExcludedImportTypes": [
+          "builtin"
+        ]
+      }
+    ],
+    "import/prefer-default-export": 0,
+    "no-restricted-imports": [
+      "error",
+      {
+        "paths": [
+          {
+            "name": "lodash",
+            "importNames": [
+              "default"
+            ],
+            "message": "\n Import the specific methods inside of curly brackets instead."
+          }
+        ]
+      }
+    ],
+    "no-underscore-dangle": [
+      "error",
+      {
+        "allow": [
+          "_id",
+          "__v"
+        ]
+      }
+    ]
+  },
   "overrides": [
     {
-      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "files": [
+        "*.ts",
+        "*.tsx",
+        "*.js",
+        "*.jsx"
+      ],
       "rules": {
         "@nrwl/nx/enforce-module-boundaries": [
           "error",
@@ -15,7 +133,9 @@
             "depConstraints": [
               {
                 "sourceTag": "*",
-                "onlyDependOnLibsWithTags": ["*"]
+                "onlyDependOnLibsWithTags": [
+                  "*"
+                ]
               }
             ]
           }
@@ -23,13 +143,23 @@
       }
     },
     {
-      "files": ["*.ts", "*.tsx"],
-      "extends": ["plugin:@nrwl/nx/typescript"],
+      "files": [
+        "*.ts",
+        "*.tsx"
+      ],
+      "extends": [
+        "plugin:@nrwl/nx/typescript"
+      ],
       "rules": {}
     },
     {
-      "files": ["*.js", "*.jsx"],
-      "extends": ["plugin:@nrwl/nx/javascript"],
+      "files": [
+        "*.js",
+        "*.jsx"
+      ],
+      "extends": [
+        "plugin:@nrwl/nx/javascript"
+      ],
       "rules": {}
     }
   ]

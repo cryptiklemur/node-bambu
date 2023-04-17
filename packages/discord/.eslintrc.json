@@ -1,11 +1,11 @@
 {
   "extends": ["../../.eslintrc.json"],
-  "ignorePatterns": ["!**/*"],
+  "ignorePatterns": ["!**/*", "src/test.ts"],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
       "parserOptions": {
-        "project": ["apps/slash-commands/tsconfig.*?.json"]
+        "project": ["packages/discord/tsconfig.lib.json"]
       },
       "rules": {}
     },

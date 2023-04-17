@@ -1,45 +1,33 @@
-import { CommandContext, Message, SlashCreator } from 'slash-create';
-import { BambuClient } from '@node-bambu/core';
+import type { CommandContext, SlashCreator } from 'slash-create';
+import type { BambuClient } from '@node-bambu/core';
 
 import { BaseStatusCommand } from './BaseStatusCommand';
+import type { StatusService } from '../Service/StatusService';
 
 export class PermanentStatusCommand extends BaseStatusCommand {
-  constructor(creator: SlashCreator, bambu: BambuClient) {
-    super(creator, bambu, {
+  public constructor(creator: SlashCreator, bambu: BambuClient, status: StatusService) {
+    super(creator, bambu, status, {
       name: 'perm-status',
-      description:
-        'Replies with the current status of the printer, and continues to update it every minute',
+      description: 'Replies with the current status of the printer, and continues to update it every minute',
     });
   }
 
   public override async run(ctx: CommandContext) {
     await ctx.send('Fetching status');
-    const status = this.bambu.getStatus();
-    if (!status) {
-      return ctx.editOriginal('Printer is currently unavailable');
-    }
-    if (status.state === 'IDLE') {
+
+    const job = this.bambu.printerStatus.currentJob;
+
+    if (!job) {
       return ctx.editOriginal('Printer is currently idle');
     }
 
     const msg = await ctx.editOriginal({
       content: '',
-      embeds: [this.buildEmbed(status).toJSON()],
+      embeds: [await this.status.buildEmbed(job.status)],
     });
-    setInterval(() => this.updateMessage(msg), 30 * 1000);
+
+    await this.status.addNewStatus(msg, 'permanent');
 
     return msg;
-  }
-
-  private updateMessage(msg: Message) {
-    const status = this.bambu.getStatus();
-    if (!status) {
-      return msg.edit('Printer is currently unavailable');
-    }
-    if (status.state === 'IDLE') {
-      return msg.edit('Printer is currently idle');
-    }
-
-    return msg.edit({ embeds: [this.buildEmbed(status).toJSON()] });
   }
 }

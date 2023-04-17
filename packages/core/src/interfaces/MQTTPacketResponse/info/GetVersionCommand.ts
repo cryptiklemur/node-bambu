@@ -1,5 +1,5 @@
-import {StringNum} from "../../../types";
-import {InfoMessageCommand} from "./InfoMessage";
+import type { StringNum } from '../../../types';
+import type { InfoMessageCommand } from './InfoMessage';
 
 export interface VersionModule {
   hw_ver: string;

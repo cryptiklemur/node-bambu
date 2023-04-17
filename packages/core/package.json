@@ -1,14 +1,21 @@
 {
   "name": "@node-bambu/core",
-  "packageManager": "yarn@3.5.0",
-  "version": "0.5.0",
+  "description": "NodeJS Library for Bambu Lab Printers",
+  "version": "0.1.1",
+  "author": {
+    "name": "Aaron Scherer",
+    "email": "aequasi@gmail.com"
+  },
   "license": "MIT",
   "dependencies": {
     "basic-ftp": "^5.0.2",
-    "cache-manager": "^5.2.0",
-    "debug": "^4.3.4",
     "eventemitter3": "^5.0.0",
     "mqtt": "^4.3.7"
   },
-  "main": "src/index.ts"
+  "main": "src/index.ts",
+  "packageManager": "yarn@3.5.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": "aequasi/node-bambu/tree/main/packages/core"
 }

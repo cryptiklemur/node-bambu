@@ -1,5 +1,5 @@
-import {PrintMessageCommand} from "./PrintMessage";
-import {StringNum} from "../../../types";
+import type { PrintMessageCommand } from './PrintMessage';
+import type { StringNum } from '../../../types';
 
 export interface ProjectFileCommand extends PrintMessageCommand {
   command: 'project_file';

@@ -1,5 +1,5 @@
-import {PrintMessageCommand} from "./PrintMessage";
-import {IntRange, StringNum, StringRange} from "../../../types";
+import type { PrintMessageCommand } from './PrintMessage';
+import type { IntRange, StringNum, StringRange } from '../../../types';
 
 export interface AMSTray {
   bed_temp: string;
@@ -26,11 +26,11 @@ export interface AMS {
   humidity: string;
   id: string;
   temp: string;
-  tray: [AMSTray | undefined, AMSTray | undefined, AMSTray | undefined, AMSTray | undefined]
+  tray: [AMSTray | undefined, AMSTray | undefined, AMSTray | undefined, AMSTray | undefined];
 }
 
 export interface AMSStatus {
-  ams: AMS[]
+  ams: AMS[];
   amx_exist_bits: StringNum;
   insert_flag: boolean;
   power_on_flag: boolean;
@@ -102,7 +102,7 @@ export interface PushStatusCommand extends PrintMessageCommand {
   project_id: StringNum;
   sdcard: boolean;
   sequence_id: StringNum;
-  spd_lvl: IntRange<1, 4>;
+  spd_lvl: IntRange<1, 5>;
   spd_mag: number;
   stage: number[];
   stg_cur: number;

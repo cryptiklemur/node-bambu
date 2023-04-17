@@ -1,55 +1,123 @@
+import EventEmitter from 'eventemitter3';
+
+import { Job } from '../Job';
+import type { PushStatusCommand } from '../interfaces/MQTTPacketResponse/print';
+import type { BambuClient } from '../BambuClient';
+import type { Status } from '../interfaces';
+import { getStatusFromCommand } from './status/getStatusFromCommand';
+
 export class PrinterStatus {
-  // The idle state of the printer
-  private idle: boolean | undefined;
+  private _currentJob?: Job | undefined;
+  private _lastJob?: Job | undefined;
+  private _latestStatus?: Status | undefined;
 
-  // A NodeJS.Timeout object to handle the timeout for checking if the printer is idle
-  private idleTimeout: NodeJS.Timeout | null = null;
+  public constructor(private bambu: BambuClient) {}
 
-  // The desired interval (5 minutes) in milliseconds to wait before setting `idle` to true
-  private idleCheckInterval = 5 * 60 * 1000;
-
-  // The previous value of `gcode_state`
-  private previousGcodeState: string | null = null;
-
-  // Starts the idle check by clearing any existing timeout and setting a new timeout
-  // to update the `idle` property after the specified interval
-  private startIdleCheck(): void {
-    this.clearIdleCheck();
-
-    this.idleTimeout = setTimeout(() => {
-      this.idle = true;
-    }, this.idleCheckInterval);
+  public async initialize() {
+    [this._currentJob, this._lastJob, this._latestStatus] = await Promise.all([
+      this.bambu.cache.get<Job>('printer-status:current-job'),
+      this.bambu.cache.get<Job>('printer-status:last-job'),
+      this.bambu.cache.get<Status>('printer-status:latest-status'),
+    ]);
   }
 
-  // Clears the existing idle check timeout if there is one
-  private clearIdleCheck(): void {
-    if (this.idleTimeout) {
-      clearTimeout(this.idleTimeout);
-      this.idleTimeout = null;
+  public get currentJob(): Job | undefined {
+    return this._currentJob;
+  }
+
+  private set currentJob(value: Job | undefined) {
+    this._currentJob = value;
+    this.bambu.cache.set('printer-status:current-job', this._currentJob);
+
+    if (this._currentJob) {
+      this.bambu.emit('print:start', this._currentJob);
     }
   }
 
-  // This method should be called with each status update
-  // If `gcode_state` is 'FINISH', it starts the idle check only if the previous `gcode_state` was not 'FINISH'
-  // If `gcode_state` changes to anything else, it stops the check and sets `idle` to false
-  public onStatusUpdate(gcode_state: string): void {
-    if (gcode_state === 'FINISH') {
-      if (this.previousGcodeState !== 'FINISH') {
-        this.startIdleCheck();
-      }
-    } else {
-      this.clearIdleCheck();
-      this.idle = false;
+  public get lastJob(): Job | undefined {
+    return this._lastJob;
+  }
+
+  private set lastJob(value: Job | undefined) {
+    this._lastJob = value;
+    this.bambu.cache.set('printer-status:last-job', this._lastJob);
+
+    if (this._lastJob) {
+      this.bambu.emit('print:finish', this._lastJob);
     }
-    this.previousGcodeState = gcode_state;
   }
 
-  public get isIdle() {
-    return this.idle === true;
+  public get latestStatus(): Status | undefined {
+    return this._latestStatus;
   }
 
-  public setInitialIdle(idle?: boolean) {
-    console.log('Setting initial idle status to: ', idle);
-    this.idle = idle;
+  public set latestStatus(value: Status | undefined) {
+    this._latestStatus = value;
+    this.bambu.cache.set('printer-status:latest-status', this._latestStatus);
+  }
+
+  /**
+   * When the library receives a print.push_status command, we should
+   *
+   * 1. Check the gcode_state of the push_status
+   *    a. If its FINISH
+   *        i. Check to see if we have a current job
+   *            If we do, end it, move it to previousJob, and update the status
+   *        ii. If we don't, check to see if we have a previous job
+   *            If we don't, create it and fill it
+   *            If we do, update the status
+   *    b. If its PREPARE
+   *        i. Check to see if we have a current job
+   *            If we do, end it, move it to previousJob
+   *        ii. Create a new currentJob, fill it with this status
+   *    c. Anything else, check to see if we have a current job
+   *            If we do, update it
+   *            If we don't, create a new one and fill it with this status
+   * @param data
+   */
+  public async onStatus(data: PushStatusCommand) {
+    this.latestStatus = getStatusFromCommand(data);
+
+    switch (data.gcode_state) {
+      case 'FINISH':
+        if (this.currentJob) {
+          this.lastJob = this.currentJob.end(data);
+          this.currentJob = undefined;
+
+          return;
+        }
+
+        if (!this.lastJob) {
+          this.lastJob = new Job(data).end(data);
+
+          return;
+        }
+
+        this.lastJob.updateStatus(data);
+
+        return;
+
+      case 'PREPARE':
+        if (this.currentJob) {
+          this.lastJob = this.currentJob.end(data);
+        }
+
+        this.currentJob = new Job(data);
+
+        return;
+
+      default:
+        if (this.currentJob) {
+          this.currentJob.updateStatus(data);
+          this.bambu.emit('print:update', this.currentJob);
+
+          return;
+        }
+
+        this.currentJob = new Job(data);
+        this.bambu.emit('print:update', this.currentJob);
+
+        return;
+    }
   }
 }

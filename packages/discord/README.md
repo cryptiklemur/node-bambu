@@ -11,22 +11,7 @@ Run `nx build discord-bambu` to build the library.
 Test with code like this:
 
 ```typescript
-import {BambuBot} from './index';
-
-const bot = new BambuBot({
-  discord: {
-    clientId: 'Application ID Here',
-    publicKey: 'Public Key Here',
-    token: 'Bot token here',
-  },
-  printer: {
-    host: '10.10.20.101', // Found inside the Bambu Network Settings on the Bambu printer itself (Click the Cog > Network > IP)
-    port: 8883,
-    token: '<your-token-here>', // Found inside the Bambu Network Settings on the Bambu printer itself (Click the Cog > Network > Access Code)
-    serial: '<your-serial-here>' // Found inside the Bambu System Settings on the Bambu printer itself (Click the Cog > General > Device Info)
-  },
-  streamUrl: 'Twitch or Youtube url that you are streaming to with OBS', // Optional
-});
+import { BambuBot } from './index';
 
 async function onStart() {
   console.log('Bot started');
@@ -34,5 +19,26 @@ async function onStart() {
   //console.dir(await bot.bambu.ftp.list('/'));
 }
 
-bot.start().then(onStart).catch(console.dir);
+async function main() {
+  const bot = new BambuBot(
+    new BambuClient({
+      host: '10.10.20.101', // Found inside the Bambu Network Settings on the Bambu printer itself (Click the Cog > Network > IP)
+      port: 8883,
+      token: '<your-token-here>', // Found inside the Bambu Network Settings on the Bambu printer itself (Click the Cog > Network > Access Code)
+      serial: '<your-serial-here>', // Found inside the Bambu System Settings on the Bambu printer itself (Click the Cog > General > Device Info)
+    }),
+    {
+      discord: {
+        clientId: '<discord bot application id>',
+        publicKey: '<discord bot public key>',
+        token: '<discord bot token>',
+      },
+      streamUrl: '<Twitch or Youtube stream URL for your bot status>',
+    },
+  );
+
+  bot.start().then(onStart).catch(console.dir);
+}
+
+main();
 ```

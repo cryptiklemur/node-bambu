@@ -1,5 +1,5 @@
-import {PrintMessageCommand} from "./PrintMessage";
-import {StringNum} from "../../../types";
+import type { PrintMessageCommand } from './PrintMessage';
+import type { StringNum } from '../../../types';
 
 export interface GCodeFileCommand extends PrintMessageCommand {
   command: 'gcode_file';

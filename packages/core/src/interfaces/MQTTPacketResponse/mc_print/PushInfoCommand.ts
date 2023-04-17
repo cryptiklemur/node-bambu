@@ -1,6 +1,5 @@
-import {MCPrintMessageCommand} from "./MCPrintMessage";
-import {StringNum} from "../../../types";
-
+import type { MCPrintMessageCommand } from './MCPrintMessage';
+import type { StringNum } from '../../../types';
 
 export interface PushInfoCommand extends MCPrintMessageCommand {
   command: 'push_info';
@@ -13,11 +12,11 @@ export function isPushInfoCommand(data: MCPrintMessageCommand): data is PushInfo
 }
 
 export interface CleanPushInfoCommand {
-  sequenceId: number;
   category: string;
-  subcategory?: string;
   content: string;
   rawParam: string;
+  sequenceId: number;
+  subcategory?: string;
 }
 
 export function getCleanPushInfoCommand(command: PushInfoCommand): CleanPushInfoCommand {
@@ -28,6 +27,6 @@ export function getCleanPushInfoCommand(command: PushInfoCommand): CleanPushInfo
     category,
     subcategory,
     content,
-    rawParam: command.param
-  }
+    rawParam: command.param,
+  };
 }

@@ -21,6 +21,7 @@
   },
   "sourceMaps": true,
   "exclude": [
-    ".*.js$"
+    ".*.js$",
+    "test.ts"
   ]
 }

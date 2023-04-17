@@ -1,9 +1,10 @@
-import {SlashCommand, SlashCommandOptions, SlashCreator} from "slash-create";
-import {Client} from "discord.js";
-import {BambuClient} from "@node-bambu/core";
+import type { SlashCommandOptions, SlashCreator } from 'slash-create';
+import { SlashCommand } from 'slash-create';
+import type { Client } from 'discord.js';
+import type { BambuClient } from '@node-bambu/core';
 
 export abstract class AbstractCommand extends SlashCommand<Client> {
-  public constructor(creator: SlashCreator, protected bambu: BambuClient, opts: SlashCommandOptions) {
+  protected constructor(creator: SlashCreator, protected bambu: BambuClient, opts: SlashCommandOptions) {
     super(creator, opts);
   }
 }

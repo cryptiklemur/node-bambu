@@ -1,1 +1,1 @@
-export {BambuBot, BambuBotConfiguration} from './BambuBot';
+export { BambuBot, BambuBotConfiguration } from './BambuBot';

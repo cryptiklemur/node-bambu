@@ -1,14 +1,31 @@
 {
   "name": "@node-bambu/discord",
-  "packageManager": "yarn@3.5.0",
-  "version": "0.5.0",
+  "description": "Discord bot for Bambu Lab printers",
+  "version": "0.1.1",
+  "author": {
+    "name": "Aaron Scherer",
+    "email": "aequasi@gmail.com"
+  },
   "license": "MIT",
   "dependencies": {
-    "@node-bambu/core": "^0.5.0",
+    "@node-bambu/core": "^0.1.1",
+    "axios": "^1.3.5",
     "dayjs": "^1.11.7",
     "discord.js": "^14.9.0",
     "fast-deep-equal": "^3.1.3",
     "pretty-ms": "^8.0.0",
     "slash-create": "^5.11.0"
-  }
+  },
+  "files": [
+    "src/index.ts",
+    "src/BambuBot.ts",
+    "src/Commands/*.ts",
+    "src/Service/*.ts"
+  ],
+  "main": "src/index.ts",
+  "packageManager": "yarn@3.5.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": "aequasi/node-bambu/tree/main/packages/discord"
 }

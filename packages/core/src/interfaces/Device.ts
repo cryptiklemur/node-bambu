@@ -1,3 +1,3 @@
-import {GetVersionCommand} from "./MQTTPacketResponse/info";
+import type { GetVersionCommand } from './MQTTPacketResponse/info';
 
 export type Device = GetVersionCommand;

@@ -2,6 +2,8 @@
 
 .yarn
 
+./cache
+
 # compiled output
 dist
 tmp

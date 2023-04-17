@@ -7,20 +7,18 @@
     "plugin:import/warnings",
     "plugin:import/typescript"
   ],
-  "ignorePatterns": [
-    "**/*"
-  ],
-  "plugins": [
-    "@nrwl/nx",
-    "import"
-  ],
+  "ignorePatterns": ["**/*"],
+  "plugins": ["@nrwl/nx", "import"],
+  "settings": {
+    "import/resolver": {
+      "node": {
+        "extensions": [".js", ".ts"]
+      }
+    }
+  },
   "rules": {
-    "@typescript-eslint/explicit-member-accessibility": [
-      "error"
-    ],
-    "@typescript-eslint/explicit-function-return-type": [
-      "error"
-    ],
+    "@typescript-eslint/explicit-member-accessibility": ["error"],
+    "@typescript-eslint/explicit-function-return-type": ["error"],
     "@typescript-eslint/no-object-literal-type-assertion": "off",
     "@typescript-eslint/indent": [
       "error",
@@ -30,49 +28,25 @@
         "SwitchCase": 1
       }
     ],
+    "prettier/prettier": "error",
     "import/export": "off",
-    "comma-dangle": [
-      2,
-      "always-multiline"
-    ],
+    "comma-dangle": [2, "always-multiline"],
     "import/named": "off",
-    "react/prop-types": "off",
-    "react/display-name": "off",
-    "react/react-in-jsx-scope": "off",
-    "react/no-unescaped-entities": "off",
     "import/no-default-export": "error",
     "import/extensions": [
       "error",
       "ignorePackages",
       {
         "js": "never",
-        "jsx": "never",
-        "ts": "never",
-        "tsx": "never"
+        "ts": "never"
       }
     ],
-    "import/no-unresolved": [
-      2,
-      {
-        "commonjs": true,
-        "amd": true,
-        "caseSensitive": true
-      }
-    ],
+    "import/no-unresolved": "off",
     "import/order": [
       "error",
       {
         "newlines-between": "always",
-        "groups": [
-          "builtin",
-          "external",
-          [
-            "internal",
-            "parent",
-            "sibling",
-            "index"
-          ]
-        ],
+        "groups": ["builtin", "external", ["internal", "parent", "sibling", "index"]],
         "pathGroups": [
           {
             "pattern": "@autofidev/**",
@@ -85,10 +59,8 @@
             "position": "before"
           }
         ],
-        /* This will make the @autofidev packages sort right after the other 'external' imports. */
-        "pathGroupsExcludedImportTypes": [
-          "builtin"
-        ]
+        /* This will make the @node-bambu packages sort right after the other 'external' imports. */
+        "pathGroupsExcludedImportTypes": ["builtin"]
       }
     ],
     "import/prefer-default-export": 0,
@@ -98,31 +70,53 @@
         "paths": [
           {
             "name": "lodash",
-            "importNames": [
-              "default"
-            ],
+            "importNames": ["default"],
             "message": "\n Import the specific methods inside of curly brackets instead."
           }
         ]
       }
     ],
-    "no-underscore-dangle": [
+    "object-curly-spacing": ["error", "always"],
+    "no-multiple-empty-lines": ["error", { "max": 1 }],
+    "padding-line-between-statements": [
       "error",
       {
-        "allow": [
-          "_id",
-          "__v"
+        "blankLine": "always",
+        "prev": "*",
+        "next": [
+          "return",
+          "continue",
+          "break",
+          "default",
+          "case",
+          "class",
+          "function",
+          "if",
+          "for",
+          "do",
+          "switch",
+          "while",
+          "try",
+          "block-like",
+          "block"
         ]
-      }
+      },
+      { "blankLine": "always", "prev": ["if", "for", "do", "switch", "while"], "next": "*" },
+      { "blankLine": "always", "prev": ["const", "let", "var"], "next": "*" },
+      { "blankLine": "always", "prev": "directive", "next": "*" },
+      { "blankLine": "any", "prev": ["const", "let", "var"], "next": ["const", "let", "var"] },
+      { "blankLine": "any", "prev": ["case", "default"], "next": ["case", "default"] },
+      { "blankLine": "any", "prev": "directive", "next": "directive" }
     ]
   },
   "overrides": [
     {
-      "files": [
-        "*.ts",
-        "*.tsx",
-        "*.js",
-        "*.jsx"
+      "files": ["*.ts", "*.js"],
+      "extends": [
+        "plugin:@typescript-eslint/recommended",
+        "plugin:prettier/recommended",
+        "plugin:import/typescript",
+        "plugin:typescript-sort-keys/recommended"
       ],
       "rules": {
         "@nrwl/nx/enforce-module-boundaries": [
@@ -133,9 +127,7 @@
             "depConstraints": [
               {
                 "sourceTag": "*",
-                "onlyDependOnLibsWithTags": [
-                  "*"
-                ]
+                "onlyDependOnLibsWithTags": ["*"]
               }
             ]
           }
@@ -143,23 +135,26 @@
       }
     },
     {
-      "files": [
-        "*.ts",
-        "*.tsx"
-      ],
-      "extends": [
-        "plugin:@nrwl/nx/typescript"
-      ],
-      "rules": {}
+      "files": ["*.ts"],
+      "extends": ["plugin:@nrwl/nx/typescript"],
+      "rules": {
+        "@typescript-eslint/consistent-type-imports": [
+          "error",
+          {
+            "prefer": "type-imports",
+            "disallowTypeAnnotations": true
+          }
+        ],
+        "@typescript-eslint/default-param-last": "error",
+        "no-shadow": "off",
+        "@typescript-eslint/no-shadow": "error",
+        "@typescript-eslint/prefer-optional-chain": "error",
+        "import/no-default-export": "error"
+      }
     },
     {
-      "files": [
-        "*.js",
-        "*.jsx"
-      ],
-      "extends": [
-        "plugin:@nrwl/nx/javascript"
-      ],
+      "files": ["*.js"],
+      "extends": ["plugin:@nrwl/nx/javascript"],
       "rules": {}
     }
   ]

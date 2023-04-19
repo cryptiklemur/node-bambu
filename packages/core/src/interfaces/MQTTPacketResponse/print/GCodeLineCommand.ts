@@ -1,12 +1,12 @@
 import type { PrintMessageCommand } from './PrintMessage';
-import type { StringNum } from '../../../types';
+import type { StringNumber as StringNumber } from '../../../types';
 
 export interface GCodeLineCommand extends PrintMessageCommand {
   command: 'gcode_line';
   reason: 'SUCCESS' | 'FAILURE' | string;
   result: 'SUCCESS' | 'FAILURE' | string;
-  return_code: StringNum;
-  sequence_id: StringNum;
+  return_code: StringNumber;
+  sequence_id: StringNumber;
 }
 
 export function isGCodeLineCommand(data: PrintMessageCommand): data is GCodeLineCommand {

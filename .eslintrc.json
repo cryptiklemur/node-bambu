@@ -6,7 +6,8 @@
     "plugin:@typescript-eslint/strict",
     "plugin:import/errors",
     "plugin:import/warnings",
-    "plugin:import/typescript"
+    "plugin:import/typescript",
+    "plugin:unicorn/recommended"
   ],
   "ignorePatterns": ["**/*"],
   "plugins": ["@nrwl/nx", "import"],
@@ -142,7 +143,12 @@
       { "blankLine": "any", "prev": ["const", "let", "var"], "next": ["const", "let", "var"] },
       { "blankLine": "any", "prev": ["case", "default"], "next": ["case", "default"] },
       { "blankLine": "any", "prev": "directive", "next": "directive" }
-    ]
+    ],
+    "unicorn/filename-case": [
+      "error",
+      { "cases": { "pascalCase": true, "camelCase": true }, "ignore": ["/getAMSesFromCommand.ts/"] }
+    ],
+    "@typescript-eslint/no-empty-function": ["error", { "allow": ["arrowFunctions"] }]
   },
   "overrides": [
     {

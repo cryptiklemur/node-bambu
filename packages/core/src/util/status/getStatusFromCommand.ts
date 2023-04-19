@@ -3,22 +3,26 @@ import type { Status } from '../../interfaces';
 import type { IntRange } from '../../types';
 import { getStageAsString } from './getStageAsString';
 import { getStream } from './getStream';
-import { getAMSesFromCommand } from './getAMSesFromCommand';
+import { getAmsFromCommand } from './getAmsFromCommand';
 
 export function getStatusFromCommand(data: PushStatusCommand): Status {
   function getSpeed(lvl: IntRange<1, 5>) {
     switch (lvl) {
-      case 1:
+      case 1: {
         return 'Silent';
+      }
 
-      case 2:
+      case 2: {
         return 'Standard';
+      }
 
-      case 3:
+      case 3: {
         return 'Sport';
+      }
 
-      case 4:
+      case 4: {
         return 'Ludicrous';
+      }
     }
   }
 
@@ -26,7 +30,7 @@ export function getStatusFromCommand(data: PushStatusCommand): Status {
   const remainingTime = data.mc_remaining_time * 60 * 1000;
 
   return {
-    amses: getAMSesFromCommand(data.ams),
+    amses: getAmsFromCommand(data.ams),
     currentLayer: data.layer_num,
     maxLayers: data.total_layer_num,
     gcodeFile: data.gcode_file,

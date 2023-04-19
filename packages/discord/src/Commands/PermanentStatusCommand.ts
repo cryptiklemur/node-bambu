@@ -13,7 +13,7 @@ export class PermanentStatusCommand extends BaseStatusCommand {
     });
   }
 
-  public override async run(ctx: CommandContext) {
-    return this.status.sendStatusMessage('permanent', ctx);
+  public override async run(context: CommandContext) {
+    return this.status.sendStatusMessage('permanent', context);
   }
 }

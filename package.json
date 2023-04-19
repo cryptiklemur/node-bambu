@@ -30,6 +30,7 @@
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-typescript-sort-keys": "^2.3.0",
+    "eslint-plugin-unicorn": "^46.0.0",
     "husky": "^8.0.3",
     "lint-staged": "^13.2.1",
     "mongo": "^0.1.0",

@@ -31,15 +31,17 @@ export class ConsoleLogger implements Logger {
       case 'debug':
       case 'error':
       case 'info':
-      case 'warn':
+      case 'warn': {
         console[level](message, ...meta);
 
         return;
+      }
 
-      default:
+      default: {
         console.log(`[${level}] ${message}`, ...meta);
 
         return;
+      }
     }
   }
 }

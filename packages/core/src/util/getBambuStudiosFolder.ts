@@ -1,19 +1,22 @@
-import os from 'os';
-import path from 'path';
+import os from 'node:os';
+import path from 'node:path';
 
 export function getBambuStudiosFolder() {
   const userDataFolder =
-    process.env.APPDATA ||
+    process.env.APPDATA ??
     (process.platform == 'darwin' ? process.env.HOME + '/Library/Preferences' : process.env.HOME + '/.local/share');
 
   switch (os.platform()) {
-    case 'win32':
+    case 'win32': {
       return path.resolve(userDataFolder, 'BambuStudio');
+    }
 
-    case 'darwin':
+    case 'darwin': {
       return path.resolve('/Users/', os.userInfo().username, 'Library', 'Application Support', 'BambuStudio');
+    }
 
-    default:
-      return undefined;
+    default: {
+      return;
+    }
   }
 }

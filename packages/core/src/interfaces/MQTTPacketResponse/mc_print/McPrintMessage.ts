@@ -10,10 +10,5 @@ export type MCPrintMessageCommand = {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isMCPrintMessage(data: any): data is MCPrintMessage {
-  return (
-    !!data.mc_print &&
-    !!data.mc_print.command &&
-    (data.mc_print.command as MCPrintMessageCommand) &&
-    ['push_info'].includes(data.mc_print.command)
-  );
+  return !!data?.mc_print && !!data?.mc_print?.command && ['push_info'].includes(data.mc_print.command);
 }

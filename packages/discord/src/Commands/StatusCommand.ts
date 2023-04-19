@@ -128,8 +128,8 @@ export class StatusCommand extends BaseStatusCommand {
     });
   }
 
-  public override async run(ctx: CommandContext) {
-    return this.status.sendStatusMessage('semi-permanent', ctx);
+  public override async run(context: CommandContext) {
+    return this.status.sendStatusMessage('semi-permanent', context);
   }
 
   private checkOwner(interaction: ComponentContext) {

@@ -1,4 +1,4 @@
-import type { StringNum } from '../../../types';
+import type { StringNumber as StringNumber } from '../../../types';
 import type { InfoMessageCommand } from './InfoMessage';
 
 export interface VersionModule {
@@ -11,9 +11,10 @@ export interface VersionModule {
 export interface GetVersionCommand extends InfoMessageCommand {
   command: 'get_version';
   module: VersionModule[];
-  sequence_id: StringNum;
+  sequence_id: StringNumber;
 }
 
 export function isGetVersionCommand(data: InfoMessageCommand): data is GetVersionCommand {
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   return data.command === 'get_version';
 }

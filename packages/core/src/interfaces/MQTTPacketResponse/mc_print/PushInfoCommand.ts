@@ -1,13 +1,14 @@
-import type { MCPrintMessageCommand } from './MCPrintMessage';
-import type { StringNum } from '../../../types';
+import type { MCPrintMessageCommand } from './McPrintMessage';
+import type { StringNumber as StringNumber } from '../../../types';
 
 export interface PushInfoCommand extends MCPrintMessageCommand {
   command: 'push_info';
   param: string;
-  sequence_id: StringNum;
+  sequence_id: StringNumber;
 }
 
 export function isPushInfoCommand(data: MCPrintMessageCommand): data is PushInfoCommand {
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   return data.command === 'push_info';
 }
 

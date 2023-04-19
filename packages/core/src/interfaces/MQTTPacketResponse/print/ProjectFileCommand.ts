@@ -1,12 +1,12 @@
 import type { PrintMessageCommand } from './PrintMessage';
-import type { StringNum } from '../../../types';
+import type { StringNumber as StringNumber } from '../../../types';
 
 export interface ProjectFileCommand extends PrintMessageCommand {
   command: 'project_file';
   param: `Metadata/${string}.gcode`;
   reason: 'SUCCESS' | 'FAILURE' | string;
   result: 'SUCCESS' | 'FAILURE' | string;
-  sequence_id: StringNum;
+  sequence_id: StringNumber;
   subtask_name: `${number}.3mf`;
 }
 

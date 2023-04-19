@@ -1,7 +1,7 @@
 import type { Client } from 'discord.js';
 import { ActivityType } from 'discord.js';
 
-import { sleep } from '../util/sleep';
+import { sleep } from '../Util/sleep';
 
 export function PrintFinished(client: Client, streamUrl?: string) {
   return async function () {
@@ -16,7 +16,7 @@ export function PrintFinished(client: Client, streamUrl?: string) {
       ],
     });
 
-    await sleep(30000);
+    await sleep(30_000);
     await client.user?.setPresence({
       status: 'idle',
       activities: [

@@ -9,9 +9,8 @@ export type PrintMessageCommand = { command: PrintMessageCommands } & Record<str
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isPrintMessage(data: any): data is PrintMessage {
   return (
-    !!data.print &&
-    !!data.print.command &&
-    (data.print.command as PrintMessageCommands) &&
+    !!data?.print &&
+    !!data?.print?.command &&
     ['push_status', 'resume', 'gcode_line', 'gcode_file', 'project_file'].includes(data.print.command)
   );
 }

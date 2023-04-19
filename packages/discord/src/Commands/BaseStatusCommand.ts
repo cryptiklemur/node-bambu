@@ -11,8 +11,8 @@ export abstract class BaseStatusCommand extends AbstractCommand {
     bambu: BambuClient,
     protected status: StatusService,
     protected config: BambuBotConfiguration,
-    opts: SlashCommandOptions,
+    options: SlashCommandOptions,
   ) {
-    super(creator, bambu, opts);
+    super(creator, bambu, options);
   }
 }

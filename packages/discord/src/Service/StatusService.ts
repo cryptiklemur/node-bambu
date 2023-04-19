@@ -32,12 +32,12 @@ export class StatusService {
     ]);
   }
 
-  public async sendIdleMessage(ctxOrChannel: CommandContext | TextChannel) {
+  public async sendIdleMessage(contextOrChannel: CommandContext | TextChannel) {
     const status = this.bambu.printerStatus.latestStatus;
 
-    if (ctxOrChannel instanceof CommandContext) {
+    if (contextOrChannel instanceof CommandContext) {
       if (!status) {
-        return ctxOrChannel.editOriginal({
+        return contextOrChannel.editOriginal({
           content: 'Printer is currently offline',
           embeds: [],
           components: [],
@@ -45,7 +45,7 @@ export class StatusService {
         });
       }
 
-      return ctxOrChannel.editOriginal({
+      return contextOrChannel.editOriginal({
         content: '',
         embeds: [await this.buildEmbed(status)],
         components: this.buildComponents(),
@@ -54,7 +54,7 @@ export class StatusService {
     }
 
     if (!status) {
-      return ctxOrChannel.send({
+      return contextOrChannel.send({
         content: 'Printer is currently offline',
         embeds: [],
         components: [],
@@ -62,7 +62,7 @@ export class StatusService {
       });
     }
 
-    return ctxOrChannel.send({
+    return contextOrChannel.send({
       content: '',
       embeds: [await this.buildEmbed(status)],
       components: this.buildComponents() as unknown as ActionRowData<MessageActionRowComponentData>[],
@@ -71,62 +71,56 @@ export class StatusService {
   }
 
   public async sendStatusMessage(type: MessageType, channel: TextChannel): Promise<DiscordJSMessage>;
-  public async sendStatusMessage(type: MessageType, ctx: CommandContext): Promise<Message>;
+  public async sendStatusMessage(type: MessageType, context: CommandContext): Promise<Message>;
   public async sendStatusMessage(
     type: MessageType,
-    ctxOrChannel: CommandContext | TextChannel,
+    contextOrChannel: CommandContext | TextChannel,
   ): Promise<Message | DiscordJSMessage> {
     const job = this.bambu.printerStatus.currentJob;
 
     if (!job) {
-      return this.sendIdleMessage(ctxOrChannel);
+      return this.sendIdleMessage(contextOrChannel);
     }
 
-    let msg: Message | DiscordJSMessage;
+    const message = await (contextOrChannel instanceof CommandContext
+      ? contextOrChannel.editOriginal({
+          content: '',
+          embeds: [await this.buildEmbed(job.status)],
+          components: this.buildComponents(),
+          file: await this.buildFiles(job, true),
+        })
+      : contextOrChannel.send({
+          content: '',
+          embeds: [await this.buildEmbed(job.status)],
+          components: this.buildComponents() as unknown as ActionRowData<MessageActionRowComponentData>[],
+          files: await this.buildFiles(job),
+        }));
 
-    if (ctxOrChannel instanceof CommandContext) {
-      msg = await ctxOrChannel.editOriginal({
-        content: '',
-        embeds: [await this.buildEmbed(job.status)],
-        components: this.buildComponents(),
-        file: await this.buildFiles(job, true),
-      });
-    } else {
-      msg = await ctxOrChannel.send({
-        content: '',
-        embeds: [await this.buildEmbed(job.status)],
-        components: this.buildComponents() as unknown as ActionRowData<MessageActionRowComponentData>[],
-        files: await this.buildFiles(job),
-      });
-    }
+    await this.addNewStatus(message, type);
 
-    await this.addNewStatus(msg, type);
-
-    return msg;
+    return message;
   }
 
-  public async addNewStatus(msg: Message | DiscordJSMessage, type: MessageType) {
-    const channelId = msg instanceof DiscordJSMessage ? msg.channelId : msg.channelID;
+  public async addNewStatus(message: Message | DiscordJSMessage, type: MessageType) {
+    const channelId = message instanceof DiscordJSMessage ? message.channelId : message.channelID;
     let messages: [string, string][] | undefined = await this.cache.get(type + '-messages');
 
     if (!messages) {
       messages = [];
     }
 
-    messages.push([channelId, msg.id]);
+    messages.push([channelId, message.id]);
     await this.cache.set(type + '-messages', messages);
 
-    this.intervals[`${channelId}:${msg.id}`] = setInterval(
-      () => this.updateMessage([channelId, msg.id], type),
+    this.intervals[`${channelId}:${message.id}`] = setInterval(
+      () => this.updateMessage([channelId, message.id], type),
       5 * 1000,
     );
   }
 
   public async updateMessage([channelId, messageId]: [string, string], type: MessageType) {
-    const channel = (await this.client.channels.fetch(channelId).catch(() => undefined)) as TextChannel | undefined;
-    const message = await channel?.messages
-      .fetch({ message: messageId, cache: false, force: true })
-      .catch(() => undefined);
+    const channel = (await this.client.channels.fetch(channelId).catch(() => {})) as TextChannel | undefined;
+    const message = await channel?.messages.fetch({ message: messageId, cache: false, force: true }).catch(() => {});
 
     if (!message) {
       return this.removeMessage([channelId, messageId], type);
@@ -213,7 +207,7 @@ export class StatusService {
   public async buildEmbed(status: interfaces.Status) {
     const currentAms = status.amses.find((x) => x.trays.find((y) => y?.active));
     const currentTray = currentAms?.trays.find((x) => x?.active);
-    const currentColor = currentTray?.color.toString(16).padStart(8, '0').substring(0, 6);
+    const currentColor = currentTray?.color.toString(16).padStart(8, '0').slice(0, 6);
 
     return EmbedBuilder.from({
       title: status.subtaskName,
@@ -289,7 +283,6 @@ export class StatusService {
             `\`Heatbreak:\` ${status.fans.heatbreak}%`,
           inline: true,
         },
-      ].concat(
         ...status.amses.map((ams) => ({
           name: `AMS ${ams.id + 1}`,
           value: `\`Temp:\` ${ams.temp}
@@ -307,7 +300,7 @@ ${ams.trays
   .join('\n')}`,
           inline: false,
         })),
-      ),
+      ],
     }).toJSON();
   }
 
@@ -373,7 +366,7 @@ ${ams.trays
       return;
     }
 
-    subscriptions.forEach((channelId) => this.addChannelSubscription(channelId, false));
+    for (const channelId of subscriptions) this.addChannelSubscription(channelId, false);
   }
 
   private async initializeStatuses(type: MessageType) {
@@ -383,14 +376,14 @@ ${ams.trays
       return;
     }
 
-    messages.forEach(([channelId, messageId]) => {
+    for (const [channelId, messageId] of messages) {
       this.logger.debug(`${type} message found: ${channelId}:${messageId}`);
       this.updateMessage([channelId, messageId], type);
       this.intervals[`${channelId}:${messageId}`] = setInterval(
         () => this.updateMessage([channelId, messageId], type),
         5 * 1000,
       );
-    });
+    }
   }
 
   private async removeMessage([channelId, messageId]: [string, string], type: MessageType) {
@@ -436,7 +429,7 @@ ${ams.trays
 
     console.log('Creating new status message from subscription', channelId);
 
-    const channel = (await this.client.channels.fetch(channelId).catch(() => undefined)) as TextChannel | undefined;
+    const channel = (await this.client.channels.fetch(channelId).catch(() => {})) as TextChannel | undefined;
 
     if (!channel) {
       // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
@@ -446,17 +439,17 @@ ${ams.trays
       return;
     }
 
-    const msg = await channel.send({
+    const message = await channel.send({
       embeds: [await this.buildEmbed(job.status)],
       components: this.buildComponents() as unknown as ActionRowData<MessageActionRowComponentData>[],
       files: await this.buildFiles(job),
     });
 
-    subMessages[channelId] = msg.id;
+    subMessages[channelId] = message.id;
 
     await this.cache.set('subscription-channels', subMessages);
 
-    await this.addNewStatus(msg, 'subscription');
+    await this.addNewStatus(message, 'subscription');
   }
 
   private getEmbedDescription(status: interfaces.Status) {
@@ -470,41 +463,51 @@ ${ams.trays
       : '';
 
     switch (status.state) {
-      case 'PREPARE':
+      case 'PREPARE': {
         return `Preparing to print. ${time} to print`;
+      }
 
-      case 'RUNNING':
+      case 'RUNNING': {
         return `Currently printing @ ${status.progressPercent}%.\n${time} remaining`;
+      }
 
-      case 'PAUSE':
+      case 'PAUSE': {
         return `Currently paused @ ${status.progressPercent}%.\n${time} remaining`;
+      }
 
-      case 'FINISH':
+      case 'FINISH': {
         return `Finished printing. Print took ${elapsedTime}`;
+      }
 
-      case 'IDLE':
-      default:
+      // case 'IDLE':
+      default: {
         return '';
+      }
     }
   }
 
   private getColor(status?: interfaces.Status) {
     switch (status?.state) {
-      case 'PREPARE':
-        return 0x002aff;
+      case 'PREPARE': {
+        return 0x00_2a_ff;
+      }
 
-      case 'RUNNING':
-        return 0x00ffff;
+      case 'RUNNING': {
+        return 0x00_ff_ff;
+      }
 
-      case 'PAUSE':
-        return 0xffff00;
+      case 'PAUSE': {
+        return 0xff_ff_00;
+      }
 
-      case 'FINISH':
-        return 0x22ff00;
+      case 'FINISH': {
+        return 0x22_ff_00;
+      }
 
-      case 'IDLE':
-      default:
-        return 0xffffff;
+      // case 'IDLE':
+      default: {
+        return 0xff_ff_ff;
+      }
     }
   }
 }

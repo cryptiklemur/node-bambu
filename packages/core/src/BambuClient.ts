@@ -11,7 +11,7 @@ import { getCleanPushInfoCommand, isMCPrintMessage, isPushInfoCommand } from './
 import { PrinterStatus } from './util/PrinterStatus';
 import type { BambuClientEvents, Device, Logger } from './interfaces';
 import { ConsoleLogger } from './util/ConsoleLogger';
-import { FTPService } from './Service/FTPService';
+import { FtpService } from './Service/FtpService';
 
 export interface BambuConfig {
   debugFtp?: boolean;
@@ -32,30 +32,30 @@ export class BambuClient extends events.EventEmitter<keyof BambuClientEvents> {
   protected mqttClient: mqtt.MqttClient | undefined;
   protected device: Device | undefined;
   protected logger: Logger;
-  protected ftpService: FTPService;
+  protected ftpService: FtpService;
 
   public constructor(protected config: BambuConfig) {
     super();
 
     this.logger = config.logger ?? new ConsoleLogger();
     this.printerStatus = new PrinterStatus(this);
-    this.ftpService = new FTPService(this, this.ftp, this.printerStatus, this.logger, this.config);
+    this.ftpService = new FtpService(this, this.ftp, this.printerStatus, this.logger, this.config);
   }
 
-  public override emit<K extends keyof BambuClientEvents>(event: K, ...args: BambuClientEvents[K]): boolean;
+  public override emit<K extends keyof BambuClientEvents>(event: K, ...arguments_: BambuClientEvents[K]): boolean;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public override emit(event: string, ...args: any[]): boolean {
-    return super.emit(event as keyof BambuClientEvents, ...args);
+  public override emit(event: string, ...arguments_: any[]): boolean {
+    return super.emit(event as keyof BambuClientEvents, ...arguments_);
   }
 
   public override off<K extends keyof BambuClientEvents>(
     event: K,
-    listener?: (...args: BambuClientEvents[K]) => void,
+    listener?: (...arguments_: BambuClientEvents[K]) => void,
   ): this;
   public override off(
     event: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    listener?: (...args: any[]) => void,
+    listener?: (...arguments_: any[]) => void,
   ): this {
     super.off(event as keyof BambuClientEvents, listener);
 
@@ -64,12 +64,12 @@ export class BambuClient extends events.EventEmitter<keyof BambuClientEvents> {
 
   public override once<K extends keyof BambuClientEvents>(
     event: K,
-    listener: (...args: BambuClientEvents[K]) => void,
+    listener: (...arguments_: BambuClientEvents[K]) => void,
   ): this;
   public override once(
     event: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    listener: (...args: any[]) => void,
+    listener: (...arguments_: any[]) => void,
   ): this {
     super.once(event as keyof BambuClientEvents, listener);
 
@@ -78,10 +78,10 @@ export class BambuClient extends events.EventEmitter<keyof BambuClientEvents> {
 
   public override on<K extends keyof BambuClientEvents>(
     event: K,
-    listener: (...args: BambuClientEvents[K]) => void,
+    listener: (...arguments_: BambuClientEvents[K]) => void,
   ): this;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public override on(event: string, listener: (...args: any[]) => void): this {
+  public override on(event: string, listener: (...arguments_: any[]) => void): this {
     super.on(event as keyof BambuClientEvents, listener);
 
     return this;
@@ -91,8 +91,8 @@ export class BambuClient extends events.EventEmitter<keyof BambuClientEvents> {
     return Promise.all([this.connectToMQTT(), this.connectToFTP()]);
   }
 
-  public async disconnect(force = false, opts?: Parameters<MqttClient['end']>[1]) {
-    return new Promise((resolve) => this.mqttClient?.end(force, opts, resolve));
+  public async disconnect(force = false, options?: Parameters<MqttClient['end']>[1]) {
+    return new Promise((resolve) => this.mqttClient?.end(force, options, resolve));
   }
 
   public subscribe(topic: string): Promise<void> {
@@ -135,12 +135,12 @@ export class BambuClient extends events.EventEmitter<keyof BambuClientEvents> {
         return reject('Client not connected.');
       }
 
-      const msg = typeof message === 'string' ? message : JSON.stringify(message);
+      const message_ = typeof message === 'string' ? message : JSON.stringify(message);
 
       const topic = `device/${this.config.serial}/request`;
 
-      this.mqttClient.publish(topic, msg, (error) => {
-        this.emit('published', topic, msg, error);
+      this.mqttClient.publish(topic, message_, (error) => {
+        this.emit('published', topic, message_, error);
 
         if (error) {
           return reject(`Error publishing to topic '${topic}': ${error.message}`);

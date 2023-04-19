@@ -74,7 +74,7 @@ export class PrinterStatus {
     this.latestStatus = getStatusFromCommand(data);
 
     switch (data.gcode_state) {
-      case 'FINISH':
+      case 'FINISH': {
         if (this.currentJob) {
           this.lastJob = this.currentJob.end(data);
           this.currentJob = undefined;
@@ -92,8 +92,9 @@ export class PrinterStatus {
         this.lastJob.updateStatus(data);
 
         return;
+      }
 
-      case 'PREPARE':
+      case 'PREPARE': {
         if (this.currentJob) {
           this.lastJob = this.currentJob.end(data);
         }
@@ -101,8 +102,9 @@ export class PrinterStatus {
         this.currentJob = new Job(data);
 
         return;
+      }
 
-      default:
+      default: {
         if (this.currentJob) {
           this.currentJob.updateStatus(data);
           this.bambu.emit('print:update', this.currentJob);
@@ -114,6 +116,7 @@ export class PrinterStatus {
         this.bambu.emit('print:update', this.currentJob);
 
         return;
+      }
     }
   }
 }

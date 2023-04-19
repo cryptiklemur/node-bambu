@@ -16,12 +16,12 @@ export class FileCache implements Cache {
       const file = await fsp.readFile(this.getFilePathByKey(key));
 
       return JSON.parse(file.toString('utf8'));
-    } catch (err) {
+    } catch (error) {
       //file does not exist lets return a cache miss
-      if ((err as { code: string }).code === 'ENOENT') {
+      if ((error as { code: string }).code === 'ENOENT') {
         return undefined;
       } else {
-        throw err;
+        throw error;
       }
     }
   }

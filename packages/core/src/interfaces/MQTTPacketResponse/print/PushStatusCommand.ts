@@ -1,5 +1,5 @@
 import type { PrintMessageCommand } from './PrintMessage';
-import type { IntRange, StringNum, StringRange } from '../../../types';
+import type { IntRange, StringNumber as StringNumber, StringRange } from '../../../types';
 
 export interface AMSTray {
   bed_temp: string;
@@ -31,15 +31,15 @@ export interface AMS {
 
 export interface AMSStatus {
   ams: [AMS] | [AMS, AMS] | [AMS, AMS, AMS] | [AMS, AMS, AMS, AMS];
-  amx_exist_bits: StringNum;
+  amx_exist_bits: StringNumber;
   insert_flag: boolean;
   power_on_flag: boolean;
-  tray_exist_bits: StringNum;
-  tray_is_bbl_bits: StringNum;
-  tray_now: StringNum;
-  tray_read_done_bits: StringNum;
-  tray_reading_bits: StringNum;
-  tray_tar: StringNum;
+  tray_exist_bits: StringNumber;
+  tray_is_bbl_bits: StringNumber;
+  tray_now: StringNumber;
+  tray_read_done_bits: StringNumber;
+  tray_reading_bits: StringNumber;
+  tray_tar: StringNumber;
   version: number;
 }
 
@@ -64,19 +64,19 @@ export interface PushStatusCommand extends PrintMessageCommand {
   chamber_temper: number;
   command: 'push_status';
   cooling_fan_speed: StringRange<0, 100>;
-  fail_reason: StringNum;
+  fail_reason: StringNumber;
   fan_gear: number;
   force_upgrade: boolean;
   gcode_file: `${string}.gcode`;
   gcode_file_prepare_percent: StringRange<0, 100>;
-  gcode_start_time: StringNum;
+  gcode_start_time: StringNumber;
   gcode_state: 'PREPARE' | 'RUNNING' | 'PAUSE' | 'FINISH';
   heatbreak_fan_speed: StringRange<0, 100>;
   hms: HMS[];
   home_flag: number;
   hw_switch_state: number;
   ipcam: {
-    ipcam_dev: StringNum;
+    ipcam_dev: StringNumber;
     ipcam_record: 'enable' | 'disable';
     resolution: '720p' | '1080p';
     timelapse: 'enable' | 'disable';
@@ -86,7 +86,7 @@ export interface PushStatusCommand extends PrintMessageCommand {
   lights_report: LightReport[];
   maintain: number;
   mc_percent: IntRange<0, 100>;
-  mc_print_error_code: '0' | StringNum;
+  mc_print_error_code: '0' | StringNumber;
   mc_print_stage: '1' | '2' | '3';
   mc_print_sub_stage: number;
   mc_remaining_time: number;
@@ -98,23 +98,23 @@ export interface PushStatusCommand extends PrintMessageCommand {
   print_gcode_action: number;
   print_real_action: number;
   print_type: 'cloud' | 'system' | 'local';
-  profile_id: StringNum;
-  project_id: StringNum;
+  profile_id: StringNumber;
+  project_id: StringNumber;
   sdcard: boolean;
-  sequence_id: StringNum;
+  sequence_id: StringNumber;
   spd_lvl: IntRange<1, 5>;
   spd_mag: number;
   stg: number[];
   stg_cur: number;
-  subtask_id: StringNum;
+  subtask_id: StringNumber;
   subtask_name: string;
-  task_id: StringNum;
+  task_id: StringNumber;
   total_layer_num: number;
   upgrade_state: UpgradeState;
   upload: Upload;
   wifi_signal: `-${number}dBm`;
   xcam: XCam;
-  xcam_status: StringNum;
+  xcam_status: StringNumber;
 }
 
 export interface UpgradeState {
@@ -138,7 +138,7 @@ export interface Upload {
   message: string;
   oss_url: string;
   progress: number;
-  sequence_id: StringNum;
+  sequence_id: StringNumber;
   speed: number;
   status: 'idle' | string;
   task_id: string;

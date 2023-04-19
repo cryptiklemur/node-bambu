@@ -13,7 +13,7 @@ import type { Job } from '../Job';
 import type { Logger } from '../interfaces';
 import { sleep } from '../util/sleep';
 
-export class FTPService {
+export class FtpService {
   private tempDir: string;
   private connecting = false;
   private taskRunning = false;
@@ -80,23 +80,20 @@ export class FTPService {
         this.ftp.downloadTo(path.resolve(this.tempDir, fileName), '/cache/' + fileName),
       );
 
-      console.log(file);
       const zip = new JSZip();
 
       await zip.loadAsync(await fsp.readFile(path.resolve(this.tempDir, fileName)));
       await job.updateZipFields(zip);
 
       return;
-    } catch (e) {
-      if (e instanceof FTPError) {
-        if (e.code === 550) {
-          this.logger.error("This print doesn't seem to have a 3mf file");
+    } catch (error) {
+      if (error instanceof FTPError && error.code === 550) {
+        this.logger.error("This print doesn't seem to have a 3mf file");
 
-          return;
-        }
+        return;
       }
 
-      this.logger.error('Failed to download file. Trying again in 5 seconds.', { error: e });
+      this.logger.error('Failed to download file. Trying again in 5 seconds.', { error: error });
       await sleep(5000);
 
       return this.tryFetch3MF(job);
@@ -110,14 +107,14 @@ export class FTPService {
       }
 
       await sleep(100);
-      // eslint-disable-next-line no-constant-condition
+      // eslint-disable-next-line no-constant-condition,@typescript-eslint/no-unnecessary-condition
     } while (true);
   }
 
-  private async runTask<T>(cb: () => Promise<T>) {
+  private async runTask<T>(callback: () => Promise<T>) {
     await this.awaitTask();
     this.taskRunning = true;
-    const response = await cb();
+    const response = await callback();
 
     this.taskRunning = false;
 

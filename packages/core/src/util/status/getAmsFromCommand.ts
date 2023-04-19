@@ -2,7 +2,7 @@ import type { PushStatusCommand } from '../../interfaces/MQTTPacketResponse/prin
 import type { AMS, AMSTray } from '../../interfaces';
 import type { IntRange } from '../../types';
 
-export function getAMSesFromCommand(data: PushStatusCommand['ams']): AMS[] {
+export function getAmsFromCommand(data: PushStatusCommand['ams']): AMS[] {
   return data.ams.map(
     (ams) =>
       ({
@@ -32,7 +32,7 @@ function getAMSTrayFromCommand(
     active: isActive,
     bedTemp: Number(tray.bed_temp),
     bedTempType: Number(tray.bed_temp_type),
-    color: parseInt(tray.tray_color, 16),
+    color: Number.parseInt(tray.tray_color, 16),
     diameter: Number(tray.tray_diameter),
     drying: {
       temp: Number(tray.drying_temp),

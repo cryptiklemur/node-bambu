@@ -4,7 +4,7 @@ import type { Client } from 'discord.js';
 import type { BambuClient } from '@node-bambu/core';
 
 export abstract class AbstractCommand extends SlashCommand<Client> {
-  protected constructor(creator: SlashCreator, protected bambu: BambuClient, opts: SlashCommandOptions) {
-    super(creator, opts);
+  protected constructor(creator: SlashCreator, protected bambu: BambuClient, options: SlashCommandOptions) {
+    super(creator, options);
   }
 }

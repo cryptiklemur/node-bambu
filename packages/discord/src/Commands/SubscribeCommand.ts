@@ -1,7 +1,5 @@
 import type { CommandContext, SlashCreator } from 'slash-create';
-import { ButtonStyle, ComponentType } from 'slash-create';
-import { Commands } from '@node-bambu/core';
-import type { BambuClient, types } from '@node-bambu/core';
+import type { BambuClient } from '@node-bambu/core';
 
 import { BaseStatusCommand } from './BaseStatusCommand';
 import type { StatusService } from '../Service/StatusService';
@@ -15,9 +13,9 @@ export class SubscribeCommand extends BaseStatusCommand {
     });
   }
 
-  public override async run(ctx: CommandContext) {
-    await this.status.addChannelSubscription(ctx.channelID);
+  public override async run(context: CommandContext) {
+    await this.status.addChannelSubscription(context.channelID);
 
-    return ctx.send('Channel subscribed to updates', { ephemeral: true });
+    return context.send('Channel subscribed to updates', { ephemeral: true });
   }
 }

@@ -15,6 +15,7 @@ interface LoopOptions {
   led_on_time?: number;
   loop_times?: number;
 }
+
 export const UPDATE_CHAMBER_LIGHT = (mode: 'on' | 'off' | 'flashing', loopOptions: LoopOptions = {}) => ({
   system: {
     sequence_id: '2003',

@@ -1,12 +1,44 @@
 import type { PushStatusCommand } from './MQTTPacketResponse/print';
 import type { IntRange } from '../types';
 
+export interface AMSTray {
+  active: boolean;
+  bedTemp: number;
+  bedTempType: number;
+  color: number;
+  diameter: number;
+  drying: {
+    temp: number;
+    time: number;
+  };
+  id: IntRange<0, 4>;
+  idName: string;
+  infoIdx: string;
+  nozzleTemp: {
+    max: number;
+    min: number;
+  };
+  type: string;
+  weight: number;
+}
+
+export interface AMS {
+  humidity: number;
+  id: number;
+  temp: number;
+  trays: [AMSTray | undefined, AMSTray | undefined, AMSTray | undefined, AMSTray | undefined];
+}
+
 export interface Status {
-  ams: PushStatusCommand['ams'];
+  amses: AMS[];
   /**
    * Current layer number
    */
   currentLayer: number;
+  /**
+   * Estimated total time
+   */
+  estimatedTotalTime: number;
   fans: {
     big_1: IntRange<0, 100>;
     big_2: IntRange<0, 100>;
@@ -28,10 +60,7 @@ export interface Status {
     resolution: PushStatusCommand['ipcam']['resolution'];
     timelapse: boolean;
   };
-  lights: Array<{
-    mode: PushStatusCommand['lights_report'][0]['mode'];
-    name: string;
-  }>;
+  lights: Light[];
   /**
    * Max number of layers
    */
@@ -40,17 +69,22 @@ export interface Status {
    * Current stage of the build
    */
   printStage: {
+    completedStages: number[];
     text: string;
     value: number;
   };
+  printType: 'local' | 'cloud';
+  profileId: number;
   /**
    * Current progress, as a percent
    */
   progressPercent: number;
+  projectId: number;
   /**
    * Time remaining to print the job  in milliseconds
    */
   remainingTime: number;
+  sdCard: boolean;
   /**
    * Speed of the print
    */
@@ -71,15 +105,24 @@ export interface Status {
    * The link to the stream file, if any
    */
   stream?: string;
+  subtaskId: number;
+  subtaskName: string;
+  taskId: number;
   /**
    * Name of the task
    */
   taskName: string;
   temperatures: {
+    amses:
+      | [Temperature<0, 0>]
+      | [Temperature<0, 0>, Temperature<0, 0>]
+      | [Temperature<0, 0>, Temperature<0, 0>, Temperature<0, 0>]
+      | [Temperature<0, 0>, Temperature<0, 0>, Temperature<0, 0>, Temperature<0, 0>];
     bed: Temperature<0>;
     chamber: Temperature<0, 0>;
     extruder: Temperature<0>;
   };
+  wifiSignal: string;
 }
 
 export interface Temperature<
@@ -90,4 +133,9 @@ export interface Temperature<
   actual: ActualType;
   power: PowerType;
   target: TargetType;
+}
+
+export interface Light {
+  mode: PushStatusCommand['lights_report'][0]['mode'];
+  name: string;
 }

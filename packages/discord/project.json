@@ -14,6 +14,13 @@
         "assets": ["packages/discord/*.md"]
       }
     },
+    "publish": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node tools/scripts/publish.mjs 3mf-parser {args.ver} {args.tag}"
+      },
+      "dependsOn": ["build"]
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],

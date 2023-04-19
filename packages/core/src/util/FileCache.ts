@@ -1,9 +1,8 @@
 import * as fs from 'node:fs';
-import * as crypto from 'node:crypto';
 import * as nodePath from 'node:path';
 import * as fsp from 'node:fs/promises';
 
-import type { interfaces } from '@node-bambu/core';
+import type { interfaces } from '../index';
 
 export class FileCache implements interfaces.Cache {
   constructor(private path: string = process.cwd() + '/cache') {
@@ -36,11 +35,6 @@ export class FileCache implements interfaces.Cache {
   }
 
   private getFilePathByKey(key: string) {
-    const hash = crypto
-      .createHash('md5')
-      .update(key + '')
-      .digest('hex');
-
-    return nodePath.join(this.path, 'filecache-' + hash);
+    return nodePath.join(this.path, 'filecache-' + key);
   }
 }

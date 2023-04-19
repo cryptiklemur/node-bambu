@@ -8,6 +8,12 @@ export class ConsoleLogger implements Logger {
     }
   }
 
+  public silly(message: string, ...meta: any[]): void {
+    if (process.env.SILLY?.includes('bambu')) {
+      console.debug('[SILLY]', message, ...meta);
+    }
+  }
+
   public error(message: string, ...meta: any[]): void {
     console.error(message, ...meta);
   }

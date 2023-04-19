@@ -30,7 +30,7 @@ export interface AMS {
 }
 
 export interface AMSStatus {
-  ams: AMS[];
+  ams: [AMS] | [AMS, AMS] | [AMS, AMS, AMS] | [AMS, AMS, AMS, AMS];
   amx_exist_bits: StringNum;
   insert_flag: boolean;
   power_on_flag: boolean;
@@ -104,7 +104,7 @@ export interface PushStatusCommand extends PrintMessageCommand {
   sequence_id: StringNum;
   spd_lvl: IntRange<1, 5>;
   spd_mag: number;
-  stage: number[];
+  stg: number[];
   stg_cur: number;
   subtask_id: StringNum;
   subtask_name: string;

@@ -1,6 +1,9 @@
 export type InfoMessageCommands = 'get_version';
 
-export type InfoMessage = { info: InfoMessageCommand };
+export interface InfoMessage {
+  info: InfoMessageCommand;
+}
+
 export type InfoMessageCommand = { command: InfoMessageCommands } & Record<string, unknown>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

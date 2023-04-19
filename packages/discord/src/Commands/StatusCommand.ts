@@ -1,34 +1,25 @@
-import type { CommandContext, SlashCreator } from 'slash-create';
-import { ButtonStyle, ComponentType } from 'slash-create';
+import type { CommandContext, SlashCreator, ComponentContext } from 'slash-create';
 import { Commands } from '@node-bambu/core';
 import type { BambuClient, types } from '@node-bambu/core';
 
 import { BaseStatusCommand } from './BaseStatusCommand';
 import type { StatusService } from '../Service/StatusService';
+import type { BambuBotConfiguration } from '../BambuBot';
 
-/**
- * @TODO
- * @TODO
- * @TODO
- * @TODO
- * @TODO
- * @TODO
- * @TODO
- *
- * This command should create a semi-permanent message that continues to update until the print is finished
- * it should be a persistent message through bot restarts
- *
- * There should also be a subscribe message. I need to better figure out the "start" event, and a way to track
- * when a print is started, and when a print is finished
- */
 export class StatusCommand extends BaseStatusCommand {
-  public constructor(creator: SlashCreator, bambu: BambuClient, status: StatusService) {
-    super(creator, bambu, status, {
+  public constructor(creator: SlashCreator, bambu: BambuClient, status: StatusService, config: BambuBotConfiguration) {
+    super(creator, bambu, status, config, {
       name: 'status',
       description: 'Replies with the current status of the printer',
     });
 
     creator.registerGlobalComponent('toggle-lights', async (interaction) => {
+      if (!this.checkOwner(interaction)) {
+        await interaction.sendFollowUp("You don't have permission to do that.", { ephemeral: true });
+
+        return;
+      }
+
       const lightMode = bambu.printerStatus.latestStatus?.lights.find((x) => x.name === 'chamber_light')?.mode;
 
       if (lightMode === undefined) {
@@ -42,6 +33,12 @@ export class StatusCommand extends BaseStatusCommand {
       await bambu.publish(Commands.UPDATE_CHAMBER_LIGHT(lightMode === 'on' ? 'off' : 'on'));
     });
     creator.registerGlobalComponent('toggle-print-status', async (interaction) => {
+      if (!this.checkOwner(interaction)) {
+        await interaction.sendFollowUp("You don't have permission to do that.", { ephemeral: true });
+
+        return;
+      }
+
       const state = bambu.printerStatus.currentJob?.getState();
 
       if (state === undefined) {
@@ -55,6 +52,12 @@ export class StatusCommand extends BaseStatusCommand {
       await bambu.publish(Commands.UPDATE_STATE(state === 'PAUSE' ? 'resume' : 'pause'));
     });
     creator.registerGlobalComponent('stop-print', async (interaction) => {
+      if (!this.checkOwner(interaction)) {
+        await interaction.sendFollowUp("You don't have permission to do that.", { ephemeral: true });
+
+        return;
+      }
+
       if (!bambu.printerStatus.currentJob) {
         await interaction.sendFollowUp('Nothing to stop right now.', {
           ephemeral: true,
@@ -66,6 +69,12 @@ export class StatusCommand extends BaseStatusCommand {
       await bambu.publish(Commands.UPDATE_STATE('stop'));
     });
     creator.registerGlobalComponent('speed-up', async (interaction) => {
+      if (!this.checkOwner(interaction)) {
+        await interaction.sendFollowUp("You don't have permission to do that.", { ephemeral: true });
+
+        return;
+      }
+
       const currentSpeed = bambu.printerStatus.currentJob?.getSpeed();
 
       if (currentSpeed === undefined) {
@@ -89,6 +98,12 @@ export class StatusCommand extends BaseStatusCommand {
       await bambu.publish(Commands.UPDATE_SPEED(newSpeed));
     });
     creator.registerGlobalComponent('slow-down', async (interaction) => {
+      if (!this.checkOwner(interaction)) {
+        await interaction.sendFollowUp("You don't have permission to do that.", { ephemeral: true });
+
+        return;
+      }
+
       const currentSpeed = bambu.printerStatus.currentJob?.getSpeed();
 
       if (currentSpeed === undefined) {
@@ -114,20 +129,18 @@ export class StatusCommand extends BaseStatusCommand {
   }
 
   public override async run(ctx: CommandContext) {
-    const job = this.bambu.printerStatus.currentJob;
+    return this.status.sendStatusMessage('semi-permanent', ctx);
+  }
 
-    if (!job) {
-      return ctx.send('Printer is currently idle');
+  private checkOwner(interaction: ComponentContext) {
+    if (!this.config.discord.ownerIds) {
+      return true;
     }
 
-    const msg = await ctx.editOriginal({
-      content: '',
-      embeds: [await this.status.buildEmbed(job.status)],
-      components: this.status.buildComponents(),
-    });
+    if (this.config.discord.ownerIds.includes(interaction.user.id)) {
+      return true;
+    }
 
-    await this.status.addNewStatus(msg, 'semi-permanent');
-
-    return msg;
+    return false;
   }
 }

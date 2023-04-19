@@ -1,20 +1,21 @@
 import { ActivityType, Client, GatewayDispatchEvents } from 'discord.js';
 import { GatewayServer, SlashCreator } from 'slash-create';
 import type { BambuClient, interfaces } from '@node-bambu/core';
-import { ConsoleLogger } from '@node-bambu/core';
+import { ConsoleLogger, FileCache } from '@node-bambu/core';
 
 import { StatusCommand } from './Commands/StatusCommand';
 import { PermanentStatusCommand } from './Commands/PermanentStatusCommand';
 import { StatusService } from './Service/StatusService';
-import { FileCache } from './util/FileCache';
 import { PrintFinished } from './Listener/PrintFinished';
 import { PrintStart } from './Listener/PrintStart';
 import { PrintUpdate } from './Listener/PrintUpdate';
+import { SubscribeCommand } from './Commands/SubscribeCommand';
 
 export interface BambuBotConfiguration {
   cache?: interfaces.Cache;
   discord: {
     clientId: string;
+    ownerIds?: string[];
     publicKey: string;
     token: string;
   };
@@ -23,7 +24,7 @@ export interface BambuBotConfiguration {
 }
 
 export class BambuBot {
-  public readonly client: Client<boolean>;
+  public readonly client: Client;
   public readonly creator: SlashCreator;
   public readonly status: StatusService;
   protected cache: interfaces.Cache;
@@ -44,19 +45,25 @@ export class BambuBot {
     this.creator
       .withServer(new GatewayServer((handler) => this.client.ws.on(GatewayDispatchEvents.InteractionCreate, handler)))
       .registerCommands([
-        new StatusCommand(this.creator, this.bambu, this.status),
-        new PermanentStatusCommand(this.creator, this.bambu, this.status),
+        new StatusCommand(this.creator, this.bambu, this.status, this.config),
+        new PermanentStatusCommand(this.creator, this.bambu, this.status, this.config),
+        new SubscribeCommand(this.creator, this.bambu, this.status, this.config),
       ])
       .syncCommands();
+    this.creator.on('error', console.error);
   }
 
   public async start() {
-    await this.bambu.connect();
+    this.client.on('ready', () => this.logger.info('Discord client connected'));
+    this.bambu.on('connected', () => this.logger.info('Printer connected'));
+
     await this.client.login(this.config.discord.token);
-    await this.status.initialize();
+    await this.bambu.connect();
 
     this.bambu.on('print:finish', PrintFinished(this.client, this.config.streamUrl));
     this.bambu.on('print:start', PrintStart(this.client, this.config.streamUrl));
     this.bambu.on('print:update', PrintUpdate(this.client, this.config.streamUrl));
+
+    await this.status.initialize();
   }
 }

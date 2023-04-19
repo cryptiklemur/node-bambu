@@ -12,6 +12,7 @@ import { PrinterStatus } from './util/PrinterStatus';
 import type { BambuClientEvents, Device, Logger, Cache } from './interfaces';
 import { MemoryCache } from './util/MemoryCache';
 import { ConsoleLogger } from './util/ConsoleLogger';
+import { FTPService } from './Service/FTPService';
 
 export interface BambuConfig {
   cache?: Cache;
@@ -24,12 +25,17 @@ export interface BambuConfig {
 }
 
 export class BambuClient extends events.EventEmitter<keyof BambuClientEvents> {
+  public get connected() {
+    return this.mqttClient?.connected ?? false;
+  }
+
   public readonly ftp: ftp.Client = new ftp.Client(2 * 60 * 1000);
-  protected mqttClient: mqtt.MqttClient | undefined;
-  protected device: Device | undefined;
   public readonly printerStatus;
   public readonly cache: Cache;
+  protected mqttClient: mqtt.MqttClient | undefined;
+  protected device: Device | undefined;
   protected logger: Logger;
+  protected ftpService: FTPService;
 
   public constructor(protected config: BambuConfig) {
     super();
@@ -37,10 +43,7 @@ export class BambuClient extends events.EventEmitter<keyof BambuClientEvents> {
     this.cache = config.cache ?? new MemoryCache();
     this.logger = config.logger ?? new ConsoleLogger();
     this.printerStatus = new PrinterStatus(this);
-  }
-
-  public get connected() {
-    return this.mqttClient?.connected ?? false;
+    this.ftpService = new FTPService(this, this.ftp, this.printerStatus, this.logger, this.config);
   }
 
   public override emit<K extends keyof BambuClientEvents>(event: K, ...args: BambuClientEvents[K]): boolean;
@@ -99,7 +102,7 @@ export class BambuClient extends events.EventEmitter<keyof BambuClientEvents> {
   }
 
   public subscribe(topic: string): Promise<void> {
-    this.logger.debug('Subscribing to printer', { topic });
+    this.logger.silly?.('Subscribing to printer', { topic });
 
     return new Promise<void>((resolve, reject) => {
       if (!this.mqttClient) {
@@ -113,7 +116,7 @@ export class BambuClient extends events.EventEmitter<keyof BambuClientEvents> {
           return reject(`Error subscribing to topic '${topic}': ${error.message}`);
         }
 
-        this.logger.debug('Subscribed to printer', { topic });
+        this.logger.silly?.('Subscribed to printer', { topic });
       });
 
       const listener = (receivedTopic: string, payload: Buffer) => {
@@ -133,7 +136,7 @@ export class BambuClient extends events.EventEmitter<keyof BambuClientEvents> {
   public publish(message: object): Promise<void>;
   public publish(message: string): Promise<void>;
   public publish(message: string | object): Promise<void> {
-    this.logger.debug('Publishing to printer', { message });
+    this.logger.silly?.('Publishing to printer', { message });
 
     return new Promise<void>((resolve, reject) => {
       if (!this.mqttClient) {
@@ -151,7 +154,7 @@ export class BambuClient extends events.EventEmitter<keyof BambuClientEvents> {
           return reject(`Error publishing to topic '${topic}': ${error.message}`);
         }
 
-        this.logger.debug('Published to printer', { message });
+        this.logger.silly?.('Published to printer', { message });
         resolve();
       });
     });
@@ -161,11 +164,11 @@ export class BambuClient extends events.EventEmitter<keyof BambuClientEvents> {
     this.emit('connected', packet);
 
     this.logger.debug('onConnect: Connected to printer');
-    this.logger.debug('onConnect: Subscribing to device report');
+    this.logger.silly?.('onConnect: Subscribing to device report');
     await this.subscribe(`device/${this.config.serial}/report`);
-    this.logger.debug('onConnect: Getting version info');
+    this.logger.silly?.('onConnect: Getting version info');
     await this.publish(GET_VERSION);
-    this.logger.debug('onConnect: Request Push All');
+    this.logger.silly?.('onConnect: Request Push All');
     await this.publish(PUSH_ALL);
   }
 
@@ -174,7 +177,7 @@ export class BambuClient extends events.EventEmitter<keyof BambuClientEvents> {
     const key = Object.keys(data)[0];
 
     this.emit('message', data[key]);
-    this.logger.debug('onMessage: ', { key, data: JSON.stringify(data[key]) });
+    this.logger.silly?.('onMessage: ', { key, data: JSON.stringify(data[key]) });
 
     if (isInfoMessage(data)) {
       this.emit(`command:${data.info.command}`, data.info as GetVersionCommand);
@@ -231,17 +234,18 @@ export class BambuClient extends events.EventEmitter<keyof BambuClientEvents> {
   }
 
   private async connectToFTP() {
-    return this.ftp.access({
-      host: this.config.host,
-      port: 990,
-      user: 'bblp',
-      password: this.config.token,
-      secure: 'implicit',
-      secureOptions: {
-        timeout: 2 * 60 * 1000,
-        sessionTimeout: 30 * 60 * 1000,
-        rejectUnauthorized: false,
-      },
+    this.ftp.ftp.log = this.logger.silly!;
+
+    this.ftp.trackProgress((info) => {
+      this.logger.silly?.('FTP Progress: ', info);
     });
+
+    setInterval(() => {
+      if (this.ftp.closed) {
+        this.ftpService.connect();
+      }
+    }, 5000);
+
+    return this.ftpService.connect();
   }
 }

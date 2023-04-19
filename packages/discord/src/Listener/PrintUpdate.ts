@@ -38,7 +38,7 @@ function areActivitiesEqual(client: Client, activities: ActivityOptions[]) {
   }
 
   for (let i = 0; i < activities.length; i++) {
-    const activity = client.user?.presence.activities[0];
+    const activity = client.user.presence.activities[0];
 
     if (activities[i].name !== activity.name) {
       return false;

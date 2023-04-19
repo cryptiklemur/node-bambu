@@ -1,5 +1,3 @@
-import EventEmitter from 'eventemitter3';
-
 import { Job } from '../Job';
 import type { PushStatusCommand } from '../interfaces/MQTTPacketResponse/print';
 import type { BambuClient } from '../BambuClient';
@@ -7,20 +5,6 @@ import type { Status } from '../interfaces';
 import { getStatusFromCommand } from './status/getStatusFromCommand';
 
 export class PrinterStatus {
-  private _currentJob?: Job | undefined;
-  private _lastJob?: Job | undefined;
-  private _latestStatus?: Status | undefined;
-
-  public constructor(private bambu: BambuClient) {}
-
-  public async initialize() {
-    [this._currentJob, this._lastJob, this._latestStatus] = await Promise.all([
-      this.bambu.cache.get<Job>('printer-status:current-job'),
-      this.bambu.cache.get<Job>('printer-status:last-job'),
-      this.bambu.cache.get<Status>('printer-status:latest-status'),
-    ]);
-  }
-
   public get currentJob(): Job | undefined {
     return this._currentJob;
   }
@@ -52,8 +36,30 @@ export class PrinterStatus {
   }
 
   public set latestStatus(value: Status | undefined) {
+    if (!this._currentJob && value) {
+      value.state = 'IDLE';
+    }
+
     this._latestStatus = value;
     this.bambu.cache.set('printer-status:latest-status', this._latestStatus);
+  }
+
+  public get idle() {
+    return !this._currentJob;
+  }
+
+  private _currentJob?: Job | undefined;
+  private _lastJob?: Job | undefined;
+  private _latestStatus?: Status | undefined;
+
+  public constructor(private bambu: BambuClient) {}
+
+  public async initialize() {
+    [this._currentJob, this._lastJob, this._latestStatus] = await Promise.all([
+      this.bambu.cache.get<Job>('printer-status:current-job'),
+      this.bambu.cache.get<Job>('printer-status:last-job'),
+      this.bambu.cache.get<Status>('printer-status:latest-status'),
+    ]);
   }
 
   /**
@@ -93,6 +99,7 @@ export class PrinterStatus {
           return;
         }
 
+        this.latestStatus.state = 'IDLE';
         this.lastJob.updateStatus(data);
 
         return;

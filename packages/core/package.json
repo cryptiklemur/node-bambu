@@ -10,6 +10,7 @@
   "dependencies": {
     "basic-ftp": "^5.0.2",
     "eventemitter3": "^5.0.0",
+    "jszip": "^3.10.1",
     "mqtt": "^4.3.7"
   },
   "main": "src/index.ts",

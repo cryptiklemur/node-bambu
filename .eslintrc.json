@@ -3,6 +3,7 @@
   "extends": [
     "prettier",
     "plugin:@typescript-eslint/recommended",
+    "plugin:@typescript-eslint/strict",
     "plugin:import/errors",
     "plugin:import/warnings",
     "plugin:import/typescript"
@@ -17,6 +18,38 @@
     }
   },
   "rules": {
+    "@typescript-eslint/member-ordering": [
+      "error",
+      {
+        "default": [
+          // Index signature
+          // No scope for index signature.
+
+          // Fields
+          "static-field", // = ["public-static-field", "protected-static-field", "private-static-field"]
+          "static-method", // = ["public-static-method", "protected-static-method", "private-static-method"]
+
+          // Getters & Setters
+          ["static-get", "static-set"], // = ["public-static-get", "protected-static-get", "private-static-get", "public-static-set", "protected-static-set", "private-static-set"]
+
+          ["instance-get", "instance-set"], // = ["public-instance-get", "protected-instance-get", "private-instance-get", "public-instance-set", "protected-instance-set", "private-instance-set"]
+
+          ["abstract-get", "abstract-set"], // = ["public-abstract-get", "protected-abstract-get", "public-abstract-set", "protected-abstract-set"]
+
+          "instance-field", // = ["public-instance-field", "protected-instance-field", "private-instance-field"]
+          "abstract-field", // = ["public-abstract-field", "protected-abstract-field"]
+
+          // Constructors
+          "constructor", // = ["public-constructor", "protected-constructor", "private-constructor"]
+          // Static initialization
+          "static-initialization",
+
+          // Methods
+          "instance-method", // = ["public-instance-method", "protected-instance-method", "private-instance-method"]
+          "abstract-method" // = ["public-abstract-method", "protected-abstract-method"]
+        ]
+      }
+    ],
     "@typescript-eslint/explicit-member-accessibility": ["error"],
     "@typescript-eslint/explicit-function-return-type": ["error"],
     "@typescript-eslint/no-object-literal-type-assertion": "off",
@@ -28,8 +61,10 @@
         "SwitchCase": 1
       }
     ],
-    "prettier/prettier": "error",
+    "@typescript-eslint/no-unused-vars": "error",
+    "@typescript-eslint/no-unused-expressions": "error",
     "import/export": "off",
+    "semi": ["error", "always"],
     "comma-dangle": [2, "always-multiline"],
     "import/named": "off",
     "import/no-default-export": "error",
@@ -114,7 +149,6 @@
       "files": ["*.ts", "*.js"],
       "extends": [
         "plugin:@typescript-eslint/recommended",
-        "plugin:prettier/recommended",
         "plugin:import/typescript",
         "plugin:typescript-sort-keys/recommended"
       ],

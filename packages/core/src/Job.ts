@@ -1,5 +1,4 @@
 import type JSZip from 'JSZip';
-import EventEmitter from 'eventemitter3';
 
 import type { PushStatusCommand } from './interfaces/MQTTPacketResponse/print';
 import type { Status } from './interfaces';
@@ -83,7 +82,10 @@ export class Job {
   }
 
   public updateStatus(command: PushStatusCommand) {
+    const existingFinishTime = this._status.finishTime;
+
     this._status = getStatusFromCommand(command);
+    this._status.finishTime = existingFinishTime;
   }
 
   public end(command: PushStatusCommand) {

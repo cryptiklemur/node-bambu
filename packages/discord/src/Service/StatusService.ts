@@ -1,4 +1,4 @@
-import type { ActionRowData, Client, TextChannel } from 'discord.js';
+import type { ActionRowData, Client, MessageActionRowComponentData, TextChannel } from 'discord.js';
 import { Message as DiscordJSMessage, EmbedBuilder, AttachmentBuilder } from 'discord.js';
 import prettyMs from 'pretty-ms';
 import dayjs from 'dayjs';
@@ -6,8 +6,9 @@ import type { ComponentActionRow, Message, MessageFile } from 'slash-create';
 import { ButtonStyle, CommandContext, ComponentType } from 'slash-create';
 import type { BambuClient, interfaces, Job } from '@node-bambu/core';
 
-import { snakeToPascalCase } from '../util/snakeToPascalCase';
-import { sleep } from '../util/sleep';
+import { snakeToPascalCase } from '../Util/snakeToPascalCase';
+import { sleep } from '../Util/sleep';
+import type { Cache } from '../Interfaces/Cache';
 
 type MessageType = 'permanent' | 'semi-permanent' | 'subscription';
 
@@ -17,7 +18,7 @@ export class StatusService {
   public constructor(
     private client: Client,
     private bambu: BambuClient,
-    private cache: interfaces.Cache,
+    private cache: Cache,
     private logger: interfaces.Logger,
   ) {}
 
@@ -64,7 +65,7 @@ export class StatusService {
     return ctxOrChannel.send({
       content: '',
       embeds: [await this.buildEmbed(status)],
-      components: this.buildComponents() as any as ActionRowData<any>[],
+      components: this.buildComponents() as unknown as ActionRowData<MessageActionRowComponentData>[],
       files: [],
     });
   }
@@ -94,7 +95,7 @@ export class StatusService {
       msg = await ctxOrChannel.send({
         content: '',
         embeds: [await this.buildEmbed(job.status)],
-        components: this.buildComponents() as any as ActionRowData<any>[],
+        components: this.buildComponents() as unknown as ActionRowData<MessageActionRowComponentData>[],
         files: await this.buildFiles(job),
       });
     }
@@ -136,13 +137,13 @@ export class StatusService {
     this.logger.debug(`Updating ${type} status message: ${channelId}:${messageId}`);
 
     if (!job) {
+      await this.removeMessage([channelId, messageId], type);
+
       if (type === 'semi-permanent') {
         job = this.bambu.printerStatus.lastJob;
       }
 
       if (!job) {
-        await this.removeMessage([channelId, messageId], type);
-
         if (!this.bambu.printerStatus.latestStatus) {
           return message.edit({
             content: 'Printer is currently offline',
@@ -154,8 +155,9 @@ export class StatusService {
 
         await message.edit({
           content: '',
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           embeds: [await this.buildEmbed(this.bambu.printerStatus.latestStatus!)],
-          components: this.buildComponents() as any as ActionRowData<any>[],
+          components: this.buildComponents() as unknown as ActionRowData<MessageActionRowComponentData>[],
           files: [],
         });
 
@@ -168,7 +170,7 @@ export class StatusService {
         content: '',
         embeds: [await this.buildEmbed(job.status)],
         files: message.embeds[0].thumbnail === null ? await this.buildFiles(job) : undefined,
-        components: this.buildComponents() as any,
+        components: this.buildComponents() as unknown as ActionRowData<MessageActionRowComponentData>[],
       })
       .catch(() => {
         // Swallow this error
@@ -198,7 +200,6 @@ export class StatusService {
 
   public async buildFiles(job: Job): Promise<[AttachmentBuilder] | []>;
   public async buildFiles(job: Job, toJson: true): Promise<[MessageFile] | []>;
-  public async buildFiles(job: Job, toJson: false): Promise<[AttachmentBuilder] | []>;
   public async buildFiles(job: Job, toJson = false): Promise<[AttachmentBuilder | MessageFile] | []> {
     if (!job.gcodeThumbnail) {
       return [];
@@ -218,12 +219,13 @@ export class StatusService {
       title: status.subtaskName,
       description: this.getEmbedDescription(status) + '\n\nStage: ' + status.printStage.text,
       color: this.getColor(status),
-      author: currentColor
-        ? {
-            name: '​',
-            icon_url: `https://place-hold.it/128x128/${currentColor}`,
-          }
-        : undefined,
+      footer:
+        currentAms && currentTray && currentColor
+          ? {
+              text: `Current Filament - AMS #${currentAms.id + 1} - Tray #${currentTray.id + 1} - #${currentColor}`,
+              icon_url: `https://place-hold.it/128x128/${currentColor}`,
+            }
+          : undefined,
       thumbnail: { url: 'attachment://thumbnail.png' },
       fields: [
         {
@@ -408,6 +410,7 @@ ${ams.trays
 
     clearInterval(this.intervals[`${channelId}:${messageId}`]);
 
+    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
     delete this.intervals[`${channelId}:${messageId}`];
   }
 
@@ -433,9 +436,10 @@ ${ams.trays
 
     console.log('Creating new status message from subscription', channelId);
 
-    const channel = (await this.client.channels.fetch(channelId)) as TextChannel;
+    const channel = (await this.client.channels.fetch(channelId).catch(() => undefined)) as TextChannel | undefined;
 
     if (!channel) {
+      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
       delete subMessages[channelId];
       await this.cache.set('subscription-channels', subMessages);
 
@@ -444,7 +448,7 @@ ${ams.trays
 
     const msg = await channel.send({
       embeds: [await this.buildEmbed(job.status)],
-      components: this.buildComponents() as any as ActionRowData<any>[],
+      components: this.buildComponents() as unknown as ActionRowData<MessageActionRowComponentData>[],
       files: await this.buildFiles(job),
     });
 
@@ -476,8 +480,6 @@ ${ams.trays
         return `Currently paused @ ${status.progressPercent}%.\n${time} remaining`;
 
       case 'FINISH':
-        this.logger.debug('Times', status.finishTime, status.startTime, elapsedTime);
-
         return `Finished printing. Print took ${elapsedTime}`;
 
       case 'IDLE':

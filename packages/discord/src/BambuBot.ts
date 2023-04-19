@@ -1,7 +1,7 @@
 import { Client, GatewayDispatchEvents } from 'discord.js';
 import { GatewayServer, SlashCreator } from 'slash-create';
 import type { BambuClient, interfaces } from '@node-bambu/core';
-import { ConsoleLogger, FileCache } from '@node-bambu/core';
+import { ConsoleLogger } from '@node-bambu/core';
 
 import { StatusCommand } from './Commands/StatusCommand';
 import { PermanentStatusCommand } from './Commands/PermanentStatusCommand';
@@ -10,9 +10,11 @@ import { PrintFinished } from './Listener/PrintFinished';
 import { PrintStart } from './Listener/PrintStart';
 import { PrintUpdate } from './Listener/PrintUpdate';
 import { SubscribeCommand } from './Commands/SubscribeCommand';
+import { FileCache } from './Util/FileCache';
+import type { Cache } from './Interfaces/Cache';
 
 export interface BambuBotConfiguration {
-  cache?: interfaces.Cache;
+  cache?: Cache;
   discord: {
     clientId: string;
     ownerIds?: string[];
@@ -27,7 +29,7 @@ export class BambuBot {
   public readonly client: Client;
   public readonly creator: SlashCreator;
   public readonly status: StatusService;
-  protected cache: interfaces.Cache;
+  protected cache: Cache;
   protected logger: interfaces.Logger;
 
   public constructor(public readonly bambu: BambuClient, protected config: BambuBotConfiguration) {

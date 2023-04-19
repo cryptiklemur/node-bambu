@@ -9,13 +9,11 @@ import type { GetVersionCommand } from './interfaces/MQTTPacketResponse/info';
 import { isGetVersionCommand, isInfoMessage } from './interfaces/MQTTPacketResponse/info';
 import { getCleanPushInfoCommand, isMCPrintMessage, isPushInfoCommand } from './interfaces/MQTTPacketResponse/mc_print';
 import { PrinterStatus } from './util/PrinterStatus';
-import type { BambuClientEvents, Device, Logger, Cache } from './interfaces';
-import { MemoryCache } from './util/MemoryCache';
+import type { BambuClientEvents, Device, Logger } from './interfaces';
 import { ConsoleLogger } from './util/ConsoleLogger';
 import { FTPService } from './Service/FTPService';
 
 export interface BambuConfig {
-  cache?: Cache;
   debugFtp?: boolean;
   host: string;
   logger?: Logger;
@@ -31,7 +29,6 @@ export class BambuClient extends events.EventEmitter<keyof BambuClientEvents> {
 
   public readonly ftp: ftp.Client = new ftp.Client(2 * 60 * 1000);
   public readonly printerStatus;
-  public readonly cache: Cache;
   protected mqttClient: mqtt.MqttClient | undefined;
   protected device: Device | undefined;
   protected logger: Logger;
@@ -40,7 +37,6 @@ export class BambuClient extends events.EventEmitter<keyof BambuClientEvents> {
   public constructor(protected config: BambuConfig) {
     super();
 
-    this.cache = config.cache ?? new MemoryCache();
     this.logger = config.logger ?? new ConsoleLogger();
     this.printerStatus = new PrinterStatus(this);
     this.ftpService = new FTPService(this, this.ftp, this.printerStatus, this.logger, this.config);
@@ -92,8 +88,6 @@ export class BambuClient extends events.EventEmitter<keyof BambuClientEvents> {
   }
 
   public async connect() {
-    await this.printerStatus.initialize();
-
     return Promise.all([this.connectToMQTT(), this.connectToFTP()]);
   }
 
@@ -109,7 +103,7 @@ export class BambuClient extends events.EventEmitter<keyof BambuClientEvents> {
         return reject('Client not connected.');
       }
 
-      this.mqttClient.subscribe(topic, (error) => {
+      this.mqttClient.subscribe(topic, (error: Error | undefined) => {
         this.emit('subscribed', topic, error);
 
         if (error) {
@@ -233,7 +227,7 @@ export class BambuClient extends events.EventEmitter<keyof BambuClientEvents> {
 
   private async connectToFTP() {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    this.ftp.ftp.log = this.logger.silly || (() => {});
+    this.ftp.ftp.log = this.logger.silly ?? (() => {});
 
     this.ftp.trackProgress((info) => {
       this.logger.silly?.('FTP Progress: ', info);

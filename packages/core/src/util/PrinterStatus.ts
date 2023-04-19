@@ -11,7 +11,6 @@ export class PrinterStatus {
 
   private set currentJob(value: Job | undefined) {
     this._currentJob = value;
-    this.bambu.cache.set('printer-status:current-job', this._currentJob);
 
     if (this._currentJob) {
       this.bambu.emit('print:start', this._currentJob);
@@ -24,7 +23,6 @@ export class PrinterStatus {
 
   private set lastJob(value: Job | undefined) {
     this._lastJob = value;
-    this.bambu.cache.set('printer-status:last-job', this._lastJob);
 
     if (this._lastJob) {
       this.bambu.emit('print:finish', this._lastJob);
@@ -41,7 +39,6 @@ export class PrinterStatus {
     }
 
     this._latestStatus = value;
-    this.bambu.cache.set('printer-status:latest-status', this._latestStatus);
   }
 
   public get idle() {
@@ -53,14 +50,6 @@ export class PrinterStatus {
   private _latestStatus?: Status | undefined;
 
   public constructor(private bambu: BambuClient) {}
-
-  public async initialize() {
-    [this._currentJob, this._lastJob, this._latestStatus] = await Promise.all([
-      this.bambu.cache.get<Job>('printer-status:current-job'),
-      this.bambu.cache.get<Job>('printer-status:last-job'),
-      this.bambu.cache.get<Status>('printer-status:latest-status'),
-    ]);
-  }
 
   /**
    * When the library receives a print.push_status command, we should

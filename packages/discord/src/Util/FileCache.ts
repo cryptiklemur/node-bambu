@@ -2,9 +2,9 @@ import * as fs from 'node:fs';
 import * as nodePath from 'node:path';
 import * as fsp from 'node:fs/promises';
 
-import type { interfaces } from '../index';
+import type { Cache } from '../Interfaces/Cache';
 
-export class FileCache implements interfaces.Cache {
+export class FileCache implements Cache {
   constructor(private path: string = process.cwd() + '/cache') {
     if (!fs.existsSync(path)) {
       fs.mkdirSync(path);
@@ -24,8 +24,6 @@ export class FileCache implements interfaces.Cache {
         throw err;
       }
     }
-
-    return Promise.resolve(undefined);
   }
 
   public async set<Value>(key: string, value: Value): Promise<void> {

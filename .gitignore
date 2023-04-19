@@ -2,7 +2,8 @@
 
 .yarn
 
-./cache
+cache
+.temp-ftp
 
 # compiled output
 dist

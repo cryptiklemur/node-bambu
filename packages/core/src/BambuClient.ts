@@ -133,8 +133,6 @@ export class BambuClient extends events.EventEmitter<keyof BambuClientEvents> {
     });
   }
 
-  public publish(message: object): Promise<void>;
-  public publish(message: string): Promise<void>;
   public publish(message: string | object): Promise<void> {
     this.logger.silly?.('Publishing to printer', { message });
 
@@ -234,7 +232,8 @@ export class BambuClient extends events.EventEmitter<keyof BambuClientEvents> {
   }
 
   private async connectToFTP() {
-    this.ftp.ftp.log = this.logger.silly!;
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    this.ftp.ftp.log = this.logger.silly || (() => {});
 
     this.ftp.trackProgress((info) => {
       this.logger.silly?.('FTP Progress: ', info);

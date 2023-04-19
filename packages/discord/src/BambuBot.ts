@@ -1,4 +1,4 @@
-import { ActivityType, Client, GatewayDispatchEvents } from 'discord.js';
+import { Client, GatewayDispatchEvents } from 'discord.js';
 import { GatewayServer, SlashCreator } from 'slash-create';
 import type { BambuClient, interfaces } from '@node-bambu/core';
 import { ConsoleLogger, FileCache } from '@node-bambu/core';
@@ -40,7 +40,7 @@ export class BambuBot {
       token: config.discord.token,
       client: this.client,
     });
-    this.status = new StatusService(this.client, this.bambu, this.cache, this.logger, config.streamUrl);
+    this.status = new StatusService(this.client, this.bambu, this.cache, this.logger);
 
     this.creator
       .withServer(new GatewayServer((handler) => this.client.ws.on(GatewayDispatchEvents.InteractionCreate, handler)))

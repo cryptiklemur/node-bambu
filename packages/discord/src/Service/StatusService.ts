@@ -1,7 +1,3 @@
-import * as fs from 'node:fs';
-import * as path from 'path';
-import * as process from 'process';
-
 import type { ActionRowData, Client, TextChannel } from 'discord.js';
 import { Message as DiscordJSMessage, EmbedBuilder, AttachmentBuilder } from 'discord.js';
 import prettyMs from 'pretty-ms';
@@ -23,7 +19,6 @@ export class StatusService {
     private bambu: BambuClient,
     private cache: interfaces.Cache,
     private logger: interfaces.Logger,
-    private streamUrl?: string,
   ) {}
 
   public async initialize() {
@@ -475,14 +470,10 @@ ${ams.trays
         return `Preparing to print. ${time} to print`;
 
       case 'RUNNING':
-        return `Currently printing @ ${status.progressPercent}%.\nFinishing <t:${dayjs(
-          Date.now() + status.remainingTime,
-        ).unix()}:R>`;
+        return `Currently printing @ ${status.progressPercent}%.\n${time} remaining`;
 
       case 'PAUSE':
-        return `Currently paused @ ${status.progressPercent}%.\nFinishing <t:${dayjs(
-          Date.now() + status.remainingTime,
-        ).unix()}:R>`;
+        return `Currently paused @ ${status.progressPercent}%.\n${time} remaining`;
 
       case 'FINISH':
         this.logger.debug('Times', status.finishTime, status.startTime, elapsedTime);

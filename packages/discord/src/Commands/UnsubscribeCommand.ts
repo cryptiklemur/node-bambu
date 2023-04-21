@@ -8,8 +8,9 @@ import { BambuRepository } from '../Repository/BambuRepository';
 import { StatusService } from '../Service/StatusService';
 import { SubscriptionService } from '../Service/SubscriptionService';
 import { Subscription } from '../Entity/Subscription';
+import { Owner } from '../Entity/Owner';
 
-export class SubscribeCommand extends BaseStatusCommand {
+export class UnsubscribeCommand extends BaseStatusCommand {
   public constructor(
     @inject('database') database: DataSource,
     @inject('discord.slash-creator') creator: SlashCreator,
@@ -19,8 +20,8 @@ export class SubscribeCommand extends BaseStatusCommand {
     @inject('discord.slash-creator-options') options: SlashCommandOptions,
   ) {
     super(database, creator, bambuRepository, status, {
-      name: 'subscribe',
-      description: 'Subscribes the current channel to posts from the bot when a print starts',
+      name: 'unsubscribe',
+      description: 'Unsubscribes the current channel from posts from the bot when a print starts',
       options: [
         {
           name: 'printer',
@@ -43,14 +44,11 @@ export class SubscribeCommand extends BaseStatusCommand {
       return context.send('Could not find that printer.');
     }
 
-    await this.subscriptionService.addChannelSubscription(
-      printer,
-      new Subscription({
-        channelId: context.channelID,
-        createdBy: await this.getOwner(context),
-        printer: printer.printer,
-      }),
-    );
+    await this.database.getRepository(Subscription).delete({
+      channelId: context.channelID,
+      createdBy: new Owner(context.user.id),
+      printer: printer.printer,
+    });
 
     return context.send('Channel subscribed to updates', { ephemeral: true });
   }

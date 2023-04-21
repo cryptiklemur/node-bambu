@@ -1,60 +1,103 @@
-import type { ActionRowData, Client, MessageActionRowComponentData, TextChannel } from 'discord.js';
-import { Message as DiscordJSMessage, EmbedBuilder, AttachmentBuilder } from 'discord.js';
+import { inject, injectable } from 'inversify';
+import { ComponentType, Client, EmbedBuilder, ButtonStyle, AttachmentBuilder } from 'discord.js';
+import type { MessageCreateOptions, TextChannel, Attachment, Message } from 'discord.js';
+import { DataSource } from 'typeorm';
+import type { Job } from '@node-bambu/core';
+import { interfaces } from '@node-bambu/core';
+import { CommandContext } from 'slash-create';
 import prettyMs from 'pretty-ms';
 import dayjs from 'dayjs';
-import type { ComponentActionRow, Message, MessageFile } from 'slash-create';
-import { ButtonStyle, CommandContext, ComponentType } from 'slash-create';
-import type { BambuClient, interfaces, Job } from '@node-bambu/core';
 
+import type { BambuRepositoryItem } from '../Repository/BambuRepository';
+import { BambuRepository } from '../Repository/BambuRepository';
+import { Subscription } from '../Entity/Subscription';
+import { MessageSenderService } from './MessageSenderService';
 import { snakeToPascalCase } from '../Util/snakeToPascalCase';
-import { sleep } from '../Util/sleep';
-import type { Cache } from '../Interfaces/Cache';
+import { StatusMessage } from '../Entity/StatusMessage';
+import { Owner } from '../Entity/Owner';
 
 type MessageType = 'permanent' | 'semi-permanent' | 'subscription';
 
+@injectable()
 export class StatusService {
   private intervals: Record<string, NodeJS.Timer> = {};
 
   public constructor(
-    private client: Client,
-    private bambu: BambuClient,
-    private cache: Cache,
-    private logger: interfaces.Logger,
+    @inject('discord.client') private discord: Client,
+    @inject('database') private database: DataSource,
+    @inject('repository.bambu') private bambuRepository: BambuRepository,
+    @inject('logger') private logger: interfaces.Logger,
+    @inject('service.messageSender') private messageSender: MessageSenderService,
   ) {}
 
   public async initialize() {
-    await sleep(5000);
-    await Promise.all([
-      this.initializeStatuses('permanent'),
-      this.initializeStatuses('semi-permanent'),
-      this.initializeStatuses('subscription'),
-      this.initializeChannelSubscriptions(),
-    ]);
+    const statusMessages = await this.database.getRepository(StatusMessage).find();
+    const promises: Promise<void | Message<true>>[] = [];
+
+    for (const statusMessage of statusMessages) {
+      this.logger.debug(`${statusMessage.type} message found: ${statusMessage.channelId}:${statusMessage.messageId}`);
+      promises.push(this.updateMessage(statusMessage));
+      this.intervals[statusMessage.id] = setInterval(() => this.updateMessage(statusMessage), 5 * 1000);
+    }
+
+    await Promise.all(promises);
+  }
+
+  public async sendStatusMessage(type: MessageType, contextOrChannel: CommandContext | TextChannel) {
+    const printer = await this.getPrinter(contextOrChannel);
+
+    if (!printer) {
+      await this.messageSender.sendMessage(contextOrChannel, { content: 'Printer not found' });
+
+      return;
+    }
+
+    const job = printer.client.printerStatus.currentJob;
+
+    if (!job) {
+      await this.sendIdleMessage(contextOrChannel);
+
+      return;
+    }
+
+    const message = await this.messageSender
+      .sendMessage(contextOrChannel, {
+        content: '',
+        embeds: await this.buildEmbeds(printer, job.status),
+        components: this.buildComponents(printer),
+        files: await this.buildFiles(job),
+      })
+      .catch(this.logger.error);
+
+    if (!message) {
+      return;
+    }
+
+    const owner = await this.getOwner(contextOrChannel);
+    const status = await this.database.manager.save(
+      new StatusMessage({
+        channelId: message.channelId,
+        messageId: message.id,
+        createdBy: contextOrChannel instanceof CommandContext ? owner : undefined,
+        type,
+        printer: printer.printer,
+      }),
+    );
+
+    this.intervals[status.id] = setInterval(() => this.updateMessage(status), 5 * 1000);
   }
 
   public async sendIdleMessage(contextOrChannel: CommandContext | TextChannel) {
-    const status = this.bambu.printerStatus.latestStatus;
+    const printer = await this.getPrinter(contextOrChannel);
 
-    if (contextOrChannel instanceof CommandContext) {
-      if (!status) {
-        return contextOrChannel.editOriginal({
-          content: 'Printer is currently offline',
-          embeds: [],
-          components: [],
-          file: [],
-        });
-      }
-
-      return contextOrChannel.editOriginal({
-        content: '',
-        embeds: [await this.buildEmbed(status)],
-        components: this.buildComponents(),
-        file: [],
-      });
+    if (!printer) {
+      return this.messageSender.sendMessage(contextOrChannel, { content: 'Printer not found' });
     }
 
+    const status = printer.client.printerStatus.latestStatus;
+
     if (!status) {
-      return contextOrChannel.send({
+      return this.messageSender.sendMessage(contextOrChannel, {
         content: 'Printer is currently offline',
         embeds: [],
         components: [],
@@ -62,230 +105,101 @@ export class StatusService {
       });
     }
 
-    return contextOrChannel.send({
+    return this.messageSender.sendMessage(contextOrChannel, {
       content: '',
-      embeds: [await this.buildEmbed(status)],
-      components: this.buildComponents() as unknown as ActionRowData<MessageActionRowComponentData>[],
+      embeds: await this.buildEmbeds(printer, status),
+      components: this.buildComponents(printer),
       files: [],
     });
   }
 
-  public async sendStatusMessage(type: MessageType, channel: TextChannel): Promise<DiscordJSMessage>;
-  public async sendStatusMessage(type: MessageType, context: CommandContext): Promise<Message>;
-  public async sendStatusMessage(
-    type: MessageType,
-    contextOrChannel: CommandContext | TextChannel,
-  ): Promise<Message | DiscordJSMessage> {
-    const job = this.bambu.printerStatus.currentJob;
-
-    if (!job) {
-      return this.sendIdleMessage(contextOrChannel);
-    }
-
-    const message = await (contextOrChannel instanceof CommandContext
-      ? contextOrChannel.editOriginal({
-          content: '',
-          embeds: [await this.buildEmbed(job.status)],
-          components: this.buildComponents(),
-          file: await this.buildFiles(job, true),
-        })
-      : contextOrChannel.send({
-          content: '',
-          embeds: [await this.buildEmbed(job.status)],
-          components: this.buildComponents() as unknown as ActionRowData<MessageActionRowComponentData>[],
-          files: await this.buildFiles(job),
-        }));
-
-    await this.addNewStatus(message, type);
-
-    return message;
-  }
-
-  public async addNewStatus(message: Message | DiscordJSMessage, type: MessageType) {
-    const channelId = message instanceof DiscordJSMessage ? message.channelId : message.channelID;
-    let messages: [string, string][] | undefined = await this.cache.get(type + '-messages');
-
-    if (!messages) {
-      messages = [];
-    }
-
-    messages.push([channelId, message.id]);
-    await this.cache.set(type + '-messages', messages);
-
-    this.intervals[`${channelId}:${message.id}`] = setInterval(
-      () => this.updateMessage([channelId, message.id], type),
-      5 * 1000,
-    );
-  }
-
-  public async updateMessage([channelId, messageId]: [string, string], type: MessageType) {
-    const channel = (await this.client.channels.fetch(channelId).catch(() => {})) as TextChannel | undefined;
-    const message = await channel?.messages.fetch({ message: messageId, cache: false, force: true }).catch(() => {});
-
-    if (!message) {
-      return this.removeMessage([channelId, messageId], type);
-    }
-
-    let job = this.bambu.printerStatus.currentJob;
-
-    this.logger.debug(`Updating ${type} status message: ${channelId}:${messageId}`);
-
-    if (!job) {
-      await this.removeMessage([channelId, messageId], type);
-
-      if (type === 'semi-permanent') {
-        job = this.bambu.printerStatus.lastJob;
-      }
-
-      if (!job) {
-        if (!this.bambu.printerStatus.latestStatus) {
-          return message.edit({
-            content: 'Printer is currently offline',
-            embeds: [],
-            components: [],
-            files: [],
-          });
-        }
-
-        await message.edit({
-          content: '',
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          embeds: [await this.buildEmbed(this.bambu.printerStatus.latestStatus!)],
-          components: this.buildComponents() as unknown as ActionRowData<MessageActionRowComponentData>[],
-          files: [],
-        });
-
-        return;
-      }
-    }
-
-    await message
-      .edit({
-        content: '',
-        embeds: [await this.buildEmbed(job.status)],
-        files: message.embeds[0].thumbnail === null ? await this.buildFiles(job) : undefined,
-        components: this.buildComponents() as unknown as ActionRowData<MessageActionRowComponentData>[],
-      })
-      .catch(() => {
-        // Swallow this error
-      });
-  }
-
-  /**
-   * @param channelId
-   * @param addToCache
-   */
-  public async addChannelSubscription(channelId: string, addToCache = true) {
-    this.bambu.on('print:start', (job) => this.createNewStatusMessage(channelId, job));
-
-    if (!addToCache) {
-      return;
-    }
-
-    let subscriptions = await this.cache.get<string[]>('channel-subscriptions');
-
-    if (!subscriptions) {
-      subscriptions = [];
-    }
-
-    subscriptions.push(channelId);
-    await this.cache.set('channel-subscriptions', subscriptions);
-  }
-
-  public async buildFiles(job: Job): Promise<[AttachmentBuilder] | []>;
-  public async buildFiles(job: Job, toJson: true): Promise<[MessageFile] | []>;
-  public async buildFiles(job: Job, toJson = false): Promise<[AttachmentBuilder | MessageFile] | []> {
-    if (!job.gcodeThumbnail) {
-      return [];
-    }
-
-    const builder = new AttachmentBuilder(job.gcodeThumbnail, { name: 'thumbnail.png' });
-
-    return [toJson ? (builder.toJSON() as MessageFile) : builder];
-  }
-
-  public async buildEmbed(status: interfaces.Status) {
+  public async buildEmbeds({ printer }: BambuRepositoryItem, status: interfaces.Status) {
     const currentAms = status.amses.find((x) => x.trays.find((y) => y?.active));
     const currentTray = currentAms?.trays.find((x) => x?.active);
     const currentColor = currentTray?.color.toString(16).padStart(8, '0').slice(0, 6);
 
-    return EmbedBuilder.from({
-      title: status.subtaskName,
-      description: this.getEmbedDescription(status) + '\n\nStage: ' + status.printStage.text,
-      color: this.getColor(status),
-      footer:
-        currentAms && currentTray && currentColor
-          ? {
-              text: `Current Filament - AMS #${currentAms.id + 1} - Tray #${currentTray.id + 1} - #${currentColor}`,
-              icon_url: `https://place-hold.it/128x128/${currentColor}`,
-            }
-          : undefined,
-      thumbnail: { url: 'attachment://thumbnail.png' },
-      fields: [
-        {
-          name: 'Print Time',
-          value:
-            `\`Current:\` ${prettyMs((status.finishTime ?? Date.now()) - status.startTime, {
-              colonNotation: true,
-              millisecondsDecimalDigits: 0,
-              secondsDecimalDigits: 0,
-              keepDecimalsOnWholeSeconds: false,
-            })}\n` +
-            `\`Estimated:\` ${prettyMs(status.estimatedTotalTime, {
-              colonNotation: true,
-              millisecondsDecimalDigits: 0,
-              secondsDecimalDigits: 0,
-              keepDecimalsOnWholeSeconds: false,
-            })}\n` +
-            `\`Finish:\` <t:${dayjs(Date.now() + status.remainingTime).unix()}:R>`,
-          inline: true,
+    return [
+      EmbedBuilder.from({
+        author: {
+          name: printer.name,
+          icon_url: printer.iconUrl,
         },
-        {
-          name: 'Progress',
-          value: `\`Percent:\` ${status.progressPercent}%\n\`Layer:\` ${status.currentLayer} / ${status.maxLayers}`,
-          inline: true,
-        },
-        {
-          name: 'Speed',
-          value: `${status.speed.name} (${status.speed.percent}%)`,
-          inline: true,
-        },
-        {
-          name: 'Lights',
-          value:
-            '' +
-            status.lights
-              .map((light) => {
-                const name = snakeToPascalCase(light.name.replace(/_light$/, ''));
+        title: status.subtaskName,
+        description: this.getEmbedDescription(status) + '\n\nStage: ' + status.printStage.text,
+        color: this.getColor(status),
+        footer:
+          currentAms && currentTray && currentColor
+            ? {
+                text: `Current Filament - AMS #${currentAms.id + 1} - Tray #${currentTray.id + 1} - #${currentColor}`,
+                icon_url: `https://place-hold.it/128x128/${currentColor}`,
+              }
+            : undefined,
+        thumbnail: { url: 'attachment://thumbnail.png' },
+        fields: [
+          {
+            name: 'Print Time',
+            value:
+              `\`Current:\` ${prettyMs((status.finishTime ?? Date.now()) - status.startTime, {
+                colonNotation: true,
+                millisecondsDecimalDigits: 0,
+                secondsDecimalDigits: 0,
+                keepDecimalsOnWholeSeconds: false,
+              })}\n` +
+              `\`Estimated:\` ${prettyMs(status.estimatedTotalTime, {
+                colonNotation: true,
+                millisecondsDecimalDigits: 0,
+                secondsDecimalDigits: 0,
+                keepDecimalsOnWholeSeconds: false,
+              })}\n` +
+              `\`Finish:\` <t:${dayjs(Date.now() + status.remainingTime).unix()}:R>`,
+            inline: true,
+          },
+          {
+            name: 'Progress',
+            value: `\`Percent:\` ${status.progressPercent}%\n\`Layer:\` ${status.currentLayer} / ${status.maxLayers}`,
+            inline: true,
+          },
+          {
+            name: 'Speed',
+            value: `${status.speed.name} (${status.speed.percent}%)`,
+            inline: true,
+          },
+          {
+            name: 'Lights',
+            value:
+              '' +
+              status.lights
+                .map((light) => {
+                  const name = snakeToPascalCase(light.name.replace(/_light$/, ''));
 
-                return `\`${name}:\` ${light.mode}`;
-              })
-              .join('\n'),
-          inline: true,
-        },
-        {
-          name: 'Temps',
-          value:
-            `\`Bed:\` ${status.temperatures.bed.target}°C/${status.temperatures.bed.actual}°C\n` +
-            `\`Nozzle:\` ${status.temperatures.extruder.target}°C/${status.temperatures.extruder.actual}°C\n` +
-            `\`Chamber:\` ${status.temperatures.chamber.actual}°C\n` +
-            status.temperatures.amses
-              .map((ams, index) => `\`AMS ${index + 1}:\` ${status.temperatures.amses[index].actual}°C`)
-              .join('\n'),
-          inline: true,
-        },
-        {
-          name: 'Fans',
-          value:
-            `\`Main 1:\` ${status.fans.big_1}%\n` +
-            `\`Main 2:\` ${status.fans.big_2}%\n` +
-            `\`Cooling:\` ${status.fans.cooling}%\n` +
-            `\`Heatbreak:\` ${status.fans.heatbreak}%`,
-          inline: true,
-        },
-        ...status.amses.map((ams) => ({
-          name: `AMS ${ams.id + 1}`,
-          value: `\`Temp:\` ${ams.temp}
+                  return `\`${name}:\` ${light.mode}`;
+                })
+                .join('\n'),
+            inline: true,
+          },
+          {
+            name: 'Temps',
+            value:
+              `\`Bed:\` ${status.temperatures.bed.target}°C/${status.temperatures.bed.actual}°C\n` +
+              `\`Nozzle:\` ${status.temperatures.extruder.target}°C/${status.temperatures.extruder.actual}°C\n` +
+              `\`Chamber:\` ${status.temperatures.chamber.actual}°C\n` +
+              status.temperatures.amses
+                .map((ams, index) => `\`AMS ${index + 1}:\` ${status.temperatures.amses[index].actual}°C`)
+                .join('\n'),
+            inline: true,
+          },
+          {
+            name: 'Fans',
+            value:
+              `\`Main 1:\` ${status.fans.big_1}%\n` +
+              `\`Main 2:\` ${status.fans.big_2}%\n` +
+              `\`Cooling:\` ${status.fans.cooling}%\n` +
+              `\`Heatbreak:\` ${status.fans.heatbreak}%`,
+            inline: true,
+          },
+          ...status.amses.map((ams) => ({
+            name: `AMS ${ams.id + 1}`,
+            value: `\`Temp:\` ${ams.temp}
 \`Humidity:\` ${ams.humidity}
 ${ams.trays
   .map((tray, index) => {
@@ -298,58 +212,59 @@ ${ams.trays
     }`;
   })
   .join('\n')}`,
-          inline: false,
-        })),
-      ],
-    }).toJSON();
+            inline: false,
+          })),
+        ],
+      }).toJSON(),
+    ];
   }
 
-  public buildComponents(): ComponentActionRow[] {
+  public buildComponents({ printer }: BambuRepositoryItem): MessageCreateOptions['components'] {
     return [
       {
-        type: ComponentType.ACTION_ROW,
+        type: ComponentType.ActionRow,
         components: [
           {
-            type: ComponentType.BUTTON,
-            style: ButtonStyle.SECONDARY,
+            type: ComponentType.Button,
+            style: ButtonStyle.Secondary,
             label: '',
-            custom_id: 'toggle-print-status',
+            custom_id: `${printer.id}:toggle-print-status`,
             emoji: {
               name: '⏸️',
             },
           },
           {
-            type: ComponentType.BUTTON,
-            style: ButtonStyle.DESTRUCTIVE,
+            type: ComponentType.Button,
+            style: ButtonStyle.Danger,
             label: '',
-            custom_id: 'stop-print',
+            custom_id: `${printer.id}:stop-print`,
             emoji: {
               name: '🛑',
             },
           },
           {
-            type: ComponentType.BUTTON,
-            style: ButtonStyle.PRIMARY,
+            type: ComponentType.Button,
+            style: ButtonStyle.Primary,
             label: 'Speed',
-            custom_id: 'speed-up',
+            custom_id: `${printer.id}:speed-up`,
             emoji: {
               name: '⬆️',
             },
           },
           {
-            type: ComponentType.BUTTON,
-            style: ButtonStyle.PRIMARY,
+            type: ComponentType.Button,
+            style: ButtonStyle.Primary,
             label: 'Speed',
-            custom_id: 'slow-down',
+            custom_id: `${printer.id}:slow-down`,
             emoji: {
               name: '⬇️',
             },
           },
           {
-            type: ComponentType.BUTTON,
-            style: ButtonStyle.PRIMARY,
+            type: ComponentType.Button,
+            style: ButtonStyle.Primary,
             label: 'Toggle',
-            custom_id: 'toggle-lights',
+            custom_id: `${printer.id}:toggle-lights`,
             emoji: {
               name: '💡',
             },
@@ -359,97 +274,110 @@ ${ams.trays
     ];
   }
 
-  private async initializeChannelSubscriptions() {
-    const subscriptions = await this.cache.get<string[]>('channel-subscriptions');
-
-    if (!subscriptions) {
-      return;
+  public async buildFiles(job: Job, toJson = false): Promise<[Attachment | AttachmentBuilder] | []> {
+    if (!job.gcodeThumbnail) {
+      return [];
     }
 
-    for (const channelId of subscriptions) this.addChannelSubscription(channelId, false);
+    const builder = new AttachmentBuilder(job.gcodeThumbnail, { name: 'thumbnail.png' });
+
+    return [toJson ? (builder.toJSON() as Attachment) : builder];
   }
 
-  private async initializeStatuses(type: MessageType) {
-    const messages: [string, string][] | undefined = await this.cache.get(type + '-messages');
+  public async getOwner(contextOrChannel: CommandContext | TextChannel) {
+    if (contextOrChannel instanceof CommandContext) {
+      const owner = await this.database.getRepository(Owner).findOneBy({ id: contextOrChannel.user.id });
 
-    if (!messages) {
-      return;
+      if (owner) {
+        return owner;
+      }
+
+      return this.database.manager.save(new Owner(contextOrChannel.user.id));
     }
 
-    for (const [channelId, messageId] of messages) {
-      this.logger.debug(`${type} message found: ${channelId}:${messageId}`);
-      this.updateMessage([channelId, messageId], type);
-      this.intervals[`${channelId}:${messageId}`] = setInterval(
-        () => this.updateMessage([channelId, messageId], type),
-        5 * 1000,
-      );
-    }
+    return;
   }
 
-  private async removeMessage([channelId, messageId]: [string, string], type: MessageType) {
-    const messages: [string, string][] | undefined = await this.cache.get(type + '-messages');
+  private async updateMessage(status: StatusMessage) {
+    const channel = (await this.discord.channels.fetch(status.channelId).catch(() => {})) as TextChannel | undefined;
+    const message = await channel?.messages
+      .fetch({ message: status.messageId, cache: false, force: true })
+      .catch(() => {});
 
-    if (!messages) {
+    if (!message || !channel) {
+      return this.removeStatus(status);
+    }
+
+    const printer = this.bambuRepository.findByStatus(status);
+
+    if (!printer) {
+      return this.removeStatus(status);
+    }
+
+    let job = printer.client.printerStatus.currentJob;
+
+    this.logger.debug(
+      `Updating ${status.type} status message for ${status.printer.name}: ${status.channelId}:${status.messageId}`,
+    );
+
+    if (!job) {
+      await this.removeStatus(status);
+
+      if (status.type === 'semi-permanent') {
+        job = printer.client.printerStatus.lastJob;
+      }
+
+      if (!job) {
+        if (!printer.client.printerStatus.latestStatus) {
+          return this.messageSender.sendMessage(channel, {
+            content: 'Printer is currently offline',
+            embeds: [],
+            components: [],
+            files: [],
+          });
+        }
+
+        await message.edit({
+          content: '',
+          embeds: await this.buildEmbeds(printer, printer.client.printerStatus.latestStatus),
+          components: this.buildComponents(printer),
+          files: [],
+        });
+
+        return;
+      }
+    }
+
+    await message
+      .edit({
+        content: '',
+        embeds: await this.buildEmbeds(printer, job.status),
+        components: this.buildComponents(printer),
+        files: message.embeds[0].thumbnail === null ? await this.buildFiles(job, false) : undefined,
+      })
+      .catch(this.logger.error);
+  }
+
+  private async removeStatus(status: StatusMessage) {
+    if (status.type === 'permanent') {
       return;
     }
 
-    const index = messages.findIndex((x) => x[0] === channelId && x[1] === messageId);
-
-    if (index >= 0) {
-      messages.splice(index, 1);
-
-      await this.cache.set(type + '-messages', messages);
-    }
-
-    clearInterval(this.intervals[`${channelId}:${messageId}`]);
-
+    clearInterval(this.intervals[status.id]);
     // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-    delete this.intervals[`${channelId}:${messageId}`];
+    delete this.intervals[status.id];
+
+    await this.database.manager.remove(status);
   }
 
-  /**
-   * @TODO
-   *
-   * Add them to a unique store to make sure that the subscriptions only create one message for each subscription
-   *
-   * @param channelId
-   * @param job
-   * @private
-   */
-  private async createNewStatusMessage(channelId: string, job: Job) {
-    let subMessages = await this.cache.get<Record<string, string>>('subscription-channels');
-
-    if (!subMessages) {
-      subMessages = {};
+  private async getPrinter(contextOrChannel: CommandContext | TextChannel): Promise<BambuRepositoryItem | undefined> {
+    if (contextOrChannel instanceof CommandContext) {
+      return this.bambuRepository.get(contextOrChannel.options['printer']);
     }
 
-    if (subMessages[channelId]) {
-      return;
-    }
+    const subscription = await this.database.getRepository(Subscription).findOneBy({ channelId: contextOrChannel.id });
 
-    console.log('Creating new status message from subscription', channelId);
-
-    const channel = (await this.client.channels.fetch(channelId).catch(() => {})) as TextChannel | undefined;
-
-    if (!channel) {
-      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-      delete subMessages[channelId];
-      await this.cache.set('subscription-channels', subMessages);
-
-      return;
-    }
-
-    const message = await channel.send({
-      embeds: [await this.buildEmbed(job.status)],
-      components: this.buildComponents() as unknown as ActionRowData<MessageActionRowComponentData>[],
-      files: await this.buildFiles(job),
-    });
-
-    subMessages[channelId] = message.id;
-
-    await this.cache.set('subscription-channels', subMessages);
-
-    await this.addNewStatus(message, 'subscription');
+    return subscription ? this.bambuRepository.get(subscription.printer.host) : undefined;
   }
 
   private getEmbedDescription(status: interfaces.Status) {

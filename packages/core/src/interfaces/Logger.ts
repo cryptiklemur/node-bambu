@@ -12,7 +12,8 @@ export interface Logger {
   emerg?(message: string, ...meta: any[]): void;
 
   // for cli and npm levels
-  error(message: string, ...meta: any[]): void;
+  error(message: Error): void;
+  error(message: string | Error, ...meta: any[]): void;
 
   help?(message: string, ...meta: any[]): void;
 

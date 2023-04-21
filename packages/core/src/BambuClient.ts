@@ -34,7 +34,7 @@ export class BambuClient extends events.EventEmitter<keyof BambuClientEvents> {
   protected logger: Logger;
   protected ftpService: FtpService;
 
-  public constructor(protected config: BambuConfig) {
+  public constructor(public readonly config: BambuConfig) {
     super();
 
     this.logger = config.logger ?? new ConsoleLogger();

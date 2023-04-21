@@ -14,7 +14,7 @@ export class ConsoleLogger implements Logger {
     }
   }
 
-  public error(message: string, ...meta: any[]): void {
+  public error(message: string | Error, ...meta: any[]): void {
     console.error(message, ...meta);
   }
 

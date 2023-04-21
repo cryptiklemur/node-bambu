@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import { ComponentType, Client, EmbedBuilder, ButtonStyle, AttachmentBuilder } from 'discord.js';
-import type { MessageCreateOptions, TextChannel, Attachment, Message } from 'discord.js';
+import type { MessageCreateOptions, TextChannel, Attachment, Message, APIEmbedField } from 'discord.js';
 import { DataSource } from 'typeorm';
 import type { Job } from '@node-bambu/core';
 import { interfaces } from '@node-bambu/core';
@@ -32,6 +32,7 @@ export class StatusService {
 
   public async initialize() {
     const statusMessages = await this.database.getRepository(StatusMessage).find();
+    // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
     const promises: Promise<void | Message<true>>[] = [];
 
     for (const statusMessage of statusMessages) {
@@ -197,6 +198,14 @@ export class StatusService {
               `\`Heatbreak:\` ${status.fans.heatbreak}%`,
             inline: true,
           },
+          status.hms.length > 0
+            ? {
+                name: 'Errors',
+                value: await Promise.all(
+                  status.hms.map(async (x, index) => `\`${index + 1}:\` [${await x.description}](${x.url})`),
+                ).then((x) => x.join('\n')),
+              }
+            : undefined,
           ...status.amses.map((ams) => ({
             name: `AMS ${ams.id + 1}`,
             value: `\`Temp:\` ${ams.temp}
@@ -214,7 +223,7 @@ ${ams.trays
   .join('\n')}`,
             inline: false,
           })),
-        ],
+        ].filter(Boolean) as APIEmbedField[],
       }).toJSON(),
     ];
   }

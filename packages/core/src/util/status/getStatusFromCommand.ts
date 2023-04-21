@@ -4,6 +4,7 @@ import type { IntRange } from '../../types';
 import { getStageAsString } from './getStageAsString';
 import { getStream } from './getStream';
 import { getAmsFromCommand } from './getAmsFromCommand';
+import { parseHms } from './parseHms';
 
 export function getStatusFromCommand(data: PushStatusCommand): Status {
   function getSpeed(lvl: IntRange<1, 5>) {
@@ -42,6 +43,7 @@ export function getStatusFromCommand(data: PushStatusCommand): Status {
       resolution: data.ipcam.resolution,
       timelapse: data.ipcam.timelapse === 'enable',
     },
+    hms: parseHms(data.hms),
     lights: data.lights_report.map((x) => ({ name: x.node, mode: x.mode })),
     printStage: {
       value: Number(data.stg_cur),

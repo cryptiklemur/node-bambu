@@ -29,6 +29,12 @@ export interface AMS {
   trays: [AMSTray | undefined, AMSTray | undefined, AMSTray | undefined, AMSTray | undefined];
 }
 
+export interface HMS {
+  code: `HMS_${string}`;
+  description: Promise<string>;
+  url: string;
+}
+
 export interface Status {
   amses: AMS[];
   /**
@@ -54,6 +60,7 @@ export interface Status {
    * Name of the gcode file
    */
   gcodeFile: string;
+  hms: HMS[];
   ipcam: {
     dev: boolean;
     record: boolean;

@@ -9,7 +9,7 @@ import { FTPError } from 'basic-ftp';
 
 import type { PrinterStatus } from '../util/PrinterStatus';
 import type { BambuClient, BambuConfig } from '../BambuClient';
-import type { Job } from '../Job';
+import type { Job } from '../Job/Job';
 import type { Logger } from '../interfaces';
 import { sleep } from '../util/sleep';
 

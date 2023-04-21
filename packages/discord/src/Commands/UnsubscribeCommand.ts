@@ -50,6 +50,6 @@ export class UnsubscribeCommand extends BaseStatusCommand {
       printer: printer.printer,
     });
 
-    return context.send('Channel subscribed to updates', { ephemeral: true });
+    return context.send('Channel unsubscribed from updates', { ephemeral: true });
   }
 }

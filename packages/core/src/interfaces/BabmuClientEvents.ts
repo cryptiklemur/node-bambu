@@ -9,7 +9,7 @@ import type {
   ResumeCommand,
 } from './MQTTPacketResponse/print';
 import type { CleanPushInfoCommand, PushInfoCommand } from './MQTTPacketResponse/mc_print';
-import type { Job } from '../Job';
+import type { Job } from '../Job/Job';
 
 export interface BambuClientEvents {
   'command:gcode_file': [data: GCodeFileCommand];

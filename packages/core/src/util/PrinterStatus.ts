@@ -1,4 +1,4 @@
-import { Job } from '../Job';
+import { Job } from '../Job/Job';
 import type { PushStatusCommand } from '../interfaces/MQTTPacketResponse/print';
 import type { BambuClient } from '../BambuClient';
 import type { Status } from '../interfaces';

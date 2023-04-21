@@ -1,11 +1,15 @@
 import type JSZip from 'JSZip';
 
-import type { PushStatusCommand } from './interfaces/MQTTPacketResponse/print';
-import type { Status } from './interfaces';
-import { getStatusFromCommand } from './util/status/getStatusFromCommand';
+import type { PushStatusCommand } from '../interfaces/MQTTPacketResponse/print';
+import type { Status } from '../interfaces';
+import { getStatusFromCommand } from '../util/status/getStatusFromCommand';
+import { SliceInfo } from './SliceInfo';
 
 export class Job {
   public get projectSettings(): Buffer | undefined {
+    return this._projectSettings;
+  }
+  public get plateJson(): Buffer | undefined {
     return this._projectSettings;
   }
 
@@ -13,7 +17,7 @@ export class Job {
     return this._modelSettings;
   }
 
-  public get sliceInfo(): Buffer | undefined {
+  public get sliceInfo(): SliceInfo | undefined {
     return this._sliceInfo;
   }
 
@@ -47,9 +51,10 @@ export class Job {
 
   private _zip: JSZip | undefined;
   private _gcodeThumbnail?: Buffer;
-  private _sliceInfo?: Buffer;
+  private _sliceInfo?: SliceInfo;
   private _modelSettings?: Buffer;
   private _projectSettings?: Buffer;
+  private _plateJson?: Buffer;
 
   private _status: Status;
   private _prepareStatus: Status | undefined;
@@ -103,11 +108,13 @@ export class Job {
 
     const plate = this.status.gcodeFile.replace(/\/data\/Metadata\//, '').replace(/\.gcode$/, '');
 
-    [this._gcodeThumbnail, this._sliceInfo, this._modelSettings, this._projectSettings] = await Promise.all([
-      this._zip.file('Metadata/' + plate + '.png')?.async('nodebuffer'),
-      this._zip.file('Metadata/slice_info.config')?.async('nodebuffer'),
-      this._zip.file('Metadata/model_settings.config')?.async('nodebuffer'),
-      this._zip.file('Metadata/project_settings.config')?.async('nodebuffer'),
-    ]);
+    [this._gcodeThumbnail, this._sliceInfo, this._modelSettings, this._projectSettings, this._plateJson] =
+      await Promise.all([
+        this._zip.file('Metadata/' + plate + '.png')?.async('nodebuffer'),
+        this._zip.file('Metadata/slice_info.config')?.async('nodebuffer').then(SliceInfo.create),
+        this._zip.file('Metadata/model_settings.config')?.async('nodebuffer'),
+        this._zip.file('Metadata/project_settings.config')?.async('nodebuffer'),
+        this._zip.file('Metadata/' + plate + '.json')?.async('nodebuffer'),
+      ]);
   }
 }

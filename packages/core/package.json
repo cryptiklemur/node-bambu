@@ -11,7 +11,11 @@
     "basic-ftp": "^5.0.2",
     "eventemitter3": "^5.0.0",
     "jszip": "^3.10.1",
-    "mqtt": "^4.3.7"
+    "mqtt": "^4.3.7",
+    "xml2js": "^0.5.0"
+  },
+  "devDependencies": {
+    "@types/xml2js": "^0.4.11"
   },
   "main": "src/index.ts",
   "packageManager": "yarn@3.5.0",

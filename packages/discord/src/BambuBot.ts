@@ -15,14 +15,11 @@ import { BambuRepository } from './Repository/BambuRepository';
 // eslint-disable-next-line import/order
 import Context = inversifyInterfaces.Context;
 
-import { PrinterCommand } from './Commands/PrinterCommand';
+import { Commands } from './Commands';
 import { StatusService } from './Service/StatusService';
 import { MessageSenderService } from './Service/MessageSenderService';
-import { StatusCommand } from './Commands/StatusCommand';
 import { InteractionHandler } from './Service/InteractionHandler';
-import { PermanentStatusCommand } from './Commands/PermanentStatusCommand';
 import { SubscriptionService } from './Service/SubscriptionService';
-import { SubscribeCommand } from './Commands/SubscribeCommand';
 import { Owner } from './Entity/Owner';
 
 // eslint-disable-next-line @typescript-eslint/ban-types
@@ -105,9 +102,7 @@ export class BambuBot {
     this.container.bind('service.messageSender').to(MessageSenderService);
     this.container.bind<StatusService>('service.status').to(StatusService);
 
-    const commands = [PrinterCommand, StatusCommand, PermanentStatusCommand, SubscribeCommand];
-
-    for (const command of commands) {
+    for (const command of Commands) {
       this.container.bind('discord.slash-command').to(command).whenTargetNamed(command.name);
     }
 

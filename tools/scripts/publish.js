@@ -7,10 +7,10 @@
  * You might need to authenticate with NPM before running this script.
  */
 
-import { readCachedProjectGraph } from '@nrwl/devkit';
-import { execSync } from 'child_process';
-import { readFileSync, writeFileSync } from 'fs';
-import chalk from 'chalk';
+const { readCachedProjectGraph } = require('@nrwl/devkit');
+const { execSync } = require('node:child_process');
+const { readFileSync, writeFileSync } = require('node:fs');
+const chalk = require('chalk');
 
 function invariant(condition, message) {
   if (!condition) {

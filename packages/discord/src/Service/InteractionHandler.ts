@@ -57,7 +57,7 @@ export class InteractionHandler {
   }
 
   private checkOwner(interaction: ButtonInteraction, { printer: { owners } }: BambuRepositoryItem) {
-    return owners.includes(interaction.user.id);
+    return owners.map((x) => x.id).includes(interaction.user.id);
   }
 
   private async changeSpeed(interaction: ButtonInteraction, printer: BambuRepositoryItem, speedUp: boolean) {

@@ -11,6 +11,8 @@ const { readCachedProjectGraph } = require('@nrwl/devkit');
 const { execSync } = require('node:child_process');
 const { readFileSync, writeFileSync } = require('node:fs');
 const chalk = require('chalk');
+const os = require('node:os');
+const JSZip = require('JSZip');
 
 function invariant(condition, message) {
   if (!condition) {
@@ -54,3 +56,5 @@ try {
 
 // Execute "npm publish" to publish
 execSync(`npm publish --access public --tag ${tag}`);
+execSync(`tar -cfvs ${name}.zip *`);
+execSync(`gh release create ${version} --generate-notes ${name}.zip`);

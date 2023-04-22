@@ -33,6 +33,7 @@
     "eslint-plugin-unicorn": "^46.0.0",
     "eslint-plugin-unused-imports": "^2.0.0",
     "husky": "^8.0.3",
+    "lerna": "^6.6.1",
     "lint-staged": "^13.2.1",
     "mongo": "^0.1.0",
     "mongodb": "^5.2.0",

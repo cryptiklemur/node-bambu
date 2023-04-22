@@ -1,4 +1,6 @@
-# discord-bambu
+# @node-bambu/discord
+
+[![npm (scoped)](https://img.shields.io/npm/v/@node-bambu/discord)](https://www.npmjs.com/package/@node-bambu/discord)
 
 This library was generated with [Nx](https://nx.dev).
 

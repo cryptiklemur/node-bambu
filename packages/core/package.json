@@ -1,7 +1,7 @@
 {
   "name": "@node-bambu/core",
   "description": "NodeJS Library for Bambu Lab Printers",
-  "version": "0.1.1",
+  "version": "0.2.1",
   "author": {
     "name": "Aaron Scherer",
     "email": "aequasi@gmail.com"

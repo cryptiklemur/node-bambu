@@ -1,4 +1,6 @@
-# node-bambu
+# @node-bambu/core
+
+[![npm (scoped)](https://img.shields.io/npm/v/@node-bambu/core)](https://www.npmjs.com/package/@node-bambu/core)
 
 This library is for integrating with the MQTT server running on the Bambu Labs' printers.
 

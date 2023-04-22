@@ -1,6 +1,5 @@
 {
   "name": "node-bambu",
-  "version": "0.1.1",
   "license": "MIT",
   "scripts": {
     "nx": "nx",

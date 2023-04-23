@@ -68,6 +68,7 @@ export class BambuRepository extends Map<string, BambuRepositoryItem> {
       client.on('print:finish', this.onPrintUpdate.bind(this));
       client.on('print:start', this.onPrintUpdate.bind(this));
       client.on('print:update', this.onPrintUpdate.bind(this));
+      client.on('command:push_info:clean', client.printerStatus.onPushInfo.bind(client.printerStatus));
 
       client.connect();
     });

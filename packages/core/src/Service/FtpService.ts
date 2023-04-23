@@ -27,11 +27,27 @@ export class FtpService {
   ) {
     this.tempDir = path.resolve(process.cwd(), '.temp-ftp');
 
-    if (!fs.existsSync(this.tempDir)) {
+    if (fs.existsSync(this.tempDir)) {
+      fs.readdir(this.tempDir, (error, files) => {
+        if (error) {
+          throw error;
+        }
+
+        for (const file of files) {
+          fs.unlink(path.resolve(this.tempDir, file), (error2) => {
+            if (error2) {
+              throw error2;
+            }
+          });
+        }
+      });
+    } else {
       fs.mkdirSync(this.tempDir);
     }
 
     bambu.on('print:start', this.tryFetch3MF.bind(this));
+    bambu.on('print:update', this.tryFetchLatestThumbnail.bind(this));
+    bambu.on('print:finish', this.cleanUpTempDir.bind(this));
   }
 
   public async connect() {
@@ -63,7 +79,14 @@ export class FtpService {
       });
   }
 
-  private async tryFetch3MF(job: Job): Promise<void> {
+  private async cleanUpTempDir(job: Job) {
+    const threemfFileName = job.status.subtaskName.replace(/\.3mf$/, '') + '.3mf';
+    const latestThumbnailFilename = `latest-thumbnail-${job.id}.jpg`;
+
+    await Promise.all([fsp.unlink(threemfFileName), fsp.unlink(latestThumbnailFilename)]);
+  }
+
+  private async tryFetchLatestThumbnail(job: Job): Promise<void> {
     if (this.taskRunning) {
       return;
     }
@@ -71,14 +94,43 @@ export class FtpService {
     try {
       if (this.ftp.closed) {
         await this.connect();
+
+        return this.tryFetchLatestThumbnail(job);
       }
 
-      const fileName = job.status.subtaskName.replace(/$\.3mf/, '') + '.3mf';
+      const response = await this.runTask(() => this.ftp.list('/ipcam/thumbnail'));
+      const files = response
+        .map((x) => ({ file: x, modifiedAt: new Date(x.rawModifiedAt) }))
+        .sort((a, b) => (a.modifiedAt < b.modifiedAt ? 1 : -1));
+
+      const fileName = `latest-thumbnail-${job.id}-${files[0].modifiedAt.getTime()}.jpg`;
+
+      await this.runTask(() =>
+        this.ftp.downloadTo(path.resolve(this.tempDir, fileName), '/ipcam/thumbnail/' + files[0].file.name),
+      );
+
+      job.updateThumbnail(path.resolve(this.tempDir, fileName));
+    } catch (error) {
+      this.logger.error('Failed to fetch last thumbnail', { error });
+    }
+  }
+
+  private async tryFetch3MF(job: Job): Promise<void> {
+    if (this.taskRunning || job.status.printType === 'local') {
+      return;
+    }
+
+    try {
+      if (this.ftp.closed) {
+        await this.connect();
+
+        return this.tryFetch3MF(job);
+      }
+
+      const fileName = job.status.subtaskName.replace(/\.3mf$/, '') + '.3mf';
 
       this.logger.info(`Fetching ${fileName} from ftp`);
-      const file = await this.runTask(() =>
-        this.ftp.downloadTo(path.resolve(this.tempDir, fileName), '/cache/' + fileName),
-      );
+      await this.runTask(() => this.ftp.downloadTo(path.resolve(this.tempDir, fileName), '/cache/' + fileName));
 
       const zip = new JSZip();
 
@@ -93,7 +145,7 @@ export class FtpService {
         return;
       }
 
-      this.logger.error('Failed to download file. Trying again in 5 seconds.', { error: error });
+      this.logger.error('Failed to download file. Trying again in 5 seconds.', { error });
       await sleep(5000);
 
       return this.tryFetch3MF(job);

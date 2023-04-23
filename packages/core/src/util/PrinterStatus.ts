@@ -3,6 +3,8 @@ import type { PushStatusCommand } from '../interfaces/MQTTPacketResponse/print';
 import type { BambuClient } from '../BambuClient';
 import type { Status } from '../interfaces';
 import { getStatusFromCommand } from './status/getStatusFromCommand';
+import type { CleanPushInfoCommand } from '../interfaces/MQTTPacketResponse/mc_print';
+import type { AMSRawData } from '../interfaces/Status';
 
 export class PrinterStatus {
   public get currentJob(): Job | undefined {
@@ -49,6 +51,8 @@ export class PrinterStatus {
   private _lastJob?: Job | undefined;
   private _latestStatus?: Status | undefined;
 
+  private _amsData: Record<number, AMSRawData> = {};
+
   public constructor(private bambu: BambuClient) {}
 
   /**
@@ -71,52 +75,81 @@ export class PrinterStatus {
    * @param data
    */
   public async onStatus(data: PushStatusCommand) {
-    this.latestStatus = getStatusFromCommand(data);
+    this.latestStatus = getStatusFromCommand(data, this._amsData);
 
     switch (data.gcode_state) {
       case 'FINISH': {
         if (this.currentJob) {
-          this.lastJob = this.currentJob.end(data);
+          this.lastJob = this.currentJob.end(data, this._amsData);
           this.currentJob = undefined;
 
           return;
         }
 
         if (!this.lastJob) {
-          this.lastJob = new Job(data).end(data);
+          this.lastJob = new Job(data, this._amsData).end(data, this._amsData);
 
           return;
         }
 
         this.latestStatus.state = 'IDLE';
-        this.lastJob.updateStatus(data);
+        this.lastJob.updateStatus(data, this._amsData);
 
         return;
       }
 
       case 'PREPARE': {
         if (this.currentJob) {
-          this.lastJob = this.currentJob.end(data);
+          this.lastJob = this.currentJob.end(data, this._amsData);
         }
 
-        this.currentJob = new Job(data);
+        this.currentJob = new Job(data, this._amsData);
 
         return;
       }
 
       default: {
         if (this.currentJob) {
-          this.currentJob.updateStatus(data);
+          this.currentJob.updateStatus(data, this._amsData);
           this.bambu.emit('print:update', this.currentJob);
 
           return;
         }
 
-        this.currentJob = new Job(data);
+        this.currentJob = new Job(data, this._amsData);
         this.bambu.emit('print:update', this.currentJob);
 
         return;
       }
     }
+  }
+
+  public async onPushInfo(data: CleanPushInfoCommand): Promise<void> {
+    switch (data.category) {
+      case 'AMS': {
+        {
+          const amsId = /^ams([0-3])/.exec(data.content)?.[1];
+
+          if (!amsId) {
+            return;
+          }
+
+          const temporaryAndHumidityRegex = /temp:([\d.]+);humidity:([\d.]+)%;humidity_idx:([0-5])/;
+
+          if (temporaryAndHumidityRegex.test(data.content)) {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            const [, realTemporary, humidityPercent, humidityIndex] = temporaryAndHumidityRegex.exec(data.content)!;
+
+            this._amsData[Number.parseInt(amsId, 10)] = {
+              humidityIdx: Number.parseInt(humidityIndex, 10),
+              humidityPercent: Number.parseInt(humidityPercent, 10),
+              realTemp: Number.parseInt(realTemporary, 10),
+            };
+          }
+        }
+      }
+    }
+
+    return;
   }
 }

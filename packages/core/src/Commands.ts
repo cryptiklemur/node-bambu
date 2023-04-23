@@ -50,3 +50,28 @@ export const UPDATE_STATE = (state: 'pause' | 'resume' | 'stop') => ({
   print: { sequence_id: stateMap[state], command: state },
   user_id: '123456789',
 });
+
+export const SEND_GCODE = (gcode: string[]) => ({
+  print: {
+    sequence_id: 2026,
+    command: 'gcode_line',
+    param: gcode.join('\n') + '\n',
+  },
+  user_id: '123456789',
+});
+
+export const UPDATE_LOGO_LIGHT = (mode: 'on' | 'off') => SEND_GCODE(['M960 S5 ' + (mode === 'on' ? 'P1' : 'P0')]);
+export const UPDATE_NOZZLE_LIGHT = (mode: 'on' | 'off') => SEND_GCODE(['M960 S4 ' + (mode === 'on' ? 'P1' : 'P0')]);
+
+const fanMap = { 'part-cooling': 'P1', aux: 'P2', chamber: 'P3' };
+
+export const UPDATE_FAN_SPEED = (fan: 'part-cooling' | 'aux' | 'chamber', percent: IntRange<0, 100>) => {
+  const fanValue = fanMap[fan];
+  const fanSpeed = (255 * percent) / 100;
+
+  SEND_GCODE([`M106 ${fanValue} ${fanSpeed}`]);
+};
+
+export const UPDATE_TEMPERATURE = (part: 'bed', temperature: number) => {
+  SEND_GCODE([`M140 S${temperature}`]);
+};

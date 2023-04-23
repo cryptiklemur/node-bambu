@@ -4,22 +4,22 @@ import type { Logger } from '../interfaces';
 export class ConsoleLogger implements Logger {
   public debug(message: string, ...meta: any[]): void {
     if (process.env.DEBUG?.includes('bambu')) {
-      console.debug(message, ...meta);
+      console.debug('[' + new Date().toISOString() + ']: ', message, ...meta);
     }
   }
 
   public silly(message: string, ...meta: any[]): void {
     if (process.env.SILLY?.includes('bambu')) {
-      console.debug('[SILLY]', message, ...meta);
+      console.debug('[' + new Date().toISOString + '][SILLY]: ', message, ...meta);
     }
   }
 
   public error(message: string | Error, ...meta: any[]): void {
-    console.error(message, ...meta);
+    console.error('[' + new Date().toISOString() + ']: ', message, ...meta);
   }
 
   public info(message: string, ...meta: any[]): void {
-    console.info(message, ...meta);
+    console.info('[' + new Date().toISOString() + ']: ', message, ...meta);
   }
 
   public warn(message: string, ...meta: any[]): void {
@@ -32,13 +32,13 @@ export class ConsoleLogger implements Logger {
       case 'error':
       case 'info':
       case 'warn': {
-        console[level](message, ...meta);
+        this[level](message, ...meta);
 
         return;
       }
 
       default: {
-        console.log(`[${level}] ${message}`, ...meta);
+        console.log('[' + new Date().toISOString() + ']: ', `[${level}] ${message}`, ...meta);
 
         return;
       }

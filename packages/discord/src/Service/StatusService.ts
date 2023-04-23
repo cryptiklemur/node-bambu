@@ -1,9 +1,17 @@
+import * as path from 'node:path';
+
 import { inject, injectable } from 'inversify';
 import { ComponentType, Client, EmbedBuilder, ButtonStyle, AttachmentBuilder } from 'discord.js';
-import type { MessageCreateOptions, TextChannel, Attachment, Message, APIEmbedField } from 'discord.js';
+import type {
+  MessageCreateOptions,
+  TextChannel,
+  Attachment,
+  Message,
+  APIEmbedField,
+  MessageEditOptions,
+} from 'discord.js';
 import { DataSource } from 'typeorm';
-import type { Job } from '@node-bambu/core';
-import { interfaces } from '@node-bambu/core';
+import { Job, interfaces } from '@node-bambu/core';
 import { CommandContext } from 'slash-create';
 import prettyMs from 'pretty-ms';
 import dayjs from 'dayjs';
@@ -64,7 +72,7 @@ export class StatusService {
     const message = await this.messageSender
       .sendMessage(contextOrChannel, {
         content: '',
-        embeds: await this.buildEmbeds(printer, job.status),
+        embeds: await this.buildEmbeds(printer, job),
         components: this.buildComponents(printer),
         files: await this.buildFiles(job),
       })
@@ -114,10 +122,15 @@ export class StatusService {
     });
   }
 
-  public async buildEmbeds({ printer }: BambuRepositoryItem, status: interfaces.Status) {
+  public async buildEmbeds({ printer }: BambuRepositoryItem, jobOrStatus: Job | interfaces.Status) {
+    const job = jobOrStatus instanceof Job ? jobOrStatus : undefined;
+    const status = jobOrStatus instanceof Job ? jobOrStatus.status : jobOrStatus;
+
     const currentAms = status.amses.find((x) => x.trays.find((y) => y?.active));
     const currentTray = currentAms?.trays.find((x) => x?.active);
     const currentColor = currentTray?.color.toString(16).padStart(8, '0').slice(0, 6);
+
+    const plate = status.gcodeFile.replace(/\/data\/Metadata\//, '').replace(/\.gcode$/, '');
 
     return [
       EmbedBuilder.from({
@@ -125,7 +138,7 @@ export class StatusService {
           name: printer.name,
           icon_url: printer.iconUrl,
         },
-        title: status.subtaskName,
+        title: status.printType === 'cloud' ? status.subtaskName : 'Local Print - Unable to get more info',
         description: this.getEmbedDescription(status) + '\n\nStage: ' + status.printStage.text,
         color: this.getColor(status),
         footer:
@@ -135,7 +148,8 @@ export class StatusService {
                 icon_url: `https://place-hold.it/128x128/${currentColor}`,
               }
             : undefined,
-        thumbnail: { url: 'attachment://thumbnail.png' },
+        thumbnail: job?.gcodeThumbnail ? { url: `attachment://${plate}.png` } : undefined,
+        image: job?.latestThumbnail ? { url: `attachment://${path.basename(job.latestThumbnail)}` } : undefined,
         fields: [
           {
             name: 'Print Time',
@@ -157,12 +171,7 @@ export class StatusService {
           },
           {
             name: 'Progress',
-            value: `\`Percent:\` ${status.progressPercent}%\n\`Layer:\` ${status.currentLayer} / ${status.maxLayers}`,
-            inline: true,
-          },
-          {
-            name: 'Speed',
-            value: `${status.speed.name} (${status.speed.percent}%)`,
+            value: `\`Percent:\` ${status.progressPercent}%\n\`Layer:\` ${status.currentLayer} / ${status.maxLayers}\n\`Speed:\` ${status.speed.name} (${status.speed.percent}%)`,
             inline: true,
           },
           {
@@ -198,6 +207,21 @@ export class StatusService {
               `\`Heatbreak:\` ${status.fans.heatbreak}%`,
             inline: true,
           },
+          ...status.amses.map((ams) => ({
+            name: `AMS ${ams.id + 1}`,
+            value: `\`Temp:\` ${ams.realTemp ?? ams.temp}º C
+\`Humidity:\` ${ams.humidityPercent ?? 'Unknown'}%
+${ams.trays
+  .map((tray, index) => {
+    if (tray === undefined) {
+      return `\`T${index + 1}:\` Empty`;
+    }
+
+    return `\`T${index + 1}:\` ${tray.type} - #${tray.color.toString(16).padStart(8, '0').toUpperCase()}`;
+  })
+  .join('\n')}`,
+            inline: true,
+          })),
           status.hms.length > 0
             ? {
                 name: 'Errors',
@@ -206,23 +230,6 @@ export class StatusService {
                 ).then((x) => x.join('\n')),
               }
             : undefined,
-          ...status.amses.map((ams) => ({
-            name: `AMS ${ams.id + 1}`,
-            value: `\`Temp:\` ${ams.temp}
-\`Humidity:\` ${ams.humidity}
-${ams.trays
-  .map((tray, index) => {
-    if (tray === undefined) {
-      return `\`Tray ${index + 1}:\` Empty`;
-    }
-
-    return `\`Tray ${index + 1}:\` ${tray.type} - #${tray.color.toString(16).padStart(8, '0').toUpperCase()}${
-      tray.active ? '  - ✏️' : ''
-    }`;
-  })
-  .join('\n')}`,
-            inline: false,
-          })),
         ].filter(Boolean) as APIEmbedField[],
       }).toJSON(),
     ];
@@ -283,14 +290,34 @@ ${ams.trays
     ];
   }
 
-  public async buildFiles(job: Job, toJson = false): Promise<[Attachment | AttachmentBuilder] | []> {
-    if (!job.gcodeThumbnail) {
+  public async buildFiles(
+    job: Job,
+    toJson = false,
+    message?: Message,
+  ): Promise<(Attachment | AttachmentBuilder)[] | [] | undefined> {
+    if (!job.gcodeThumbnail && !job.latestThumbnail) {
       return [];
     }
 
-    const builder = new AttachmentBuilder(job.gcodeThumbnail, { name: 'thumbnail.png' });
+    const files: AttachmentBuilder[] = [];
 
-    return [toJson ? (builder.toJSON() as Attachment) : builder];
+    const plate = job.status.gcodeFile.replace(/\/data\/Metadata\//, '').replace(/\.gcode$/, '');
+
+    if (job.gcodeThumbnail && !message?.embeds[0]?.thumbnail?.url) {
+      files.push(new AttachmentBuilder(job.gcodeThumbnail, { name: `${plate}.png` }));
+    }
+
+    if (job.latestThumbnail && !message?.embeds[0]?.image?.url.includes(path.basename(job.latestThumbnail))) {
+      files.push(new AttachmentBuilder(job.latestThumbnail, { name: path.basename(job.latestThumbnail) }));
+    }
+
+    if (files.length === 0) {
+      return undefined;
+    }
+
+    this.logger.info('New files uploaded');
+
+    return toJson ? (files.map((x) => x.toJSON()) as Attachment[]) : files;
   }
 
   public async getOwner(contextOrChannel: CommandContext | TextChannel) {
@@ -325,9 +352,12 @@ ${ams.trays
 
     let job = printer.client.printerStatus.currentJob;
 
-    this.logger.debug(
-      `Updating ${status.type} status message for ${status.printer.name}: ${status.channelId}:${status.messageId}`,
-    );
+    this.logger.silly?.(`Updating status message`, {
+      printer: status.printer.name,
+      type: status.type,
+      channel: status.channelId,
+      message: status.messageId,
+    });
 
     if (!job) {
       await this.removeStatus(status);
@@ -357,14 +387,14 @@ ${ams.trays
       }
     }
 
-    await message
-      .edit({
-        content: '',
-        embeds: await this.buildEmbeds(printer, job.status),
-        components: this.buildComponents(printer),
-        files: message.embeds[0].thumbnail === null ? await this.buildFiles(job, false) : undefined,
-      })
-      .catch(this.logger.error);
+    const content: MessageEditOptions = {
+      content: '',
+      embeds: await this.buildEmbeds(printer, job),
+      components: this.buildComponents(printer),
+      files: await this.buildFiles(job, false, message),
+    };
+
+    await message.edit(content).catch(this.logger.error);
   }
 
   private async removeStatus(status: StatusMessage) {

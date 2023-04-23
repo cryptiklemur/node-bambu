@@ -4,11 +4,17 @@ import type { PushStatusCommand } from '../interfaces/MQTTPacketResponse/print';
 import type { Status } from '../interfaces';
 import { getStatusFromCommand } from '../util/status/getStatusFromCommand';
 import { SliceInfo } from './SliceInfo';
+import type { AMSRawData } from '../interfaces/Status';
 
 export class Job {
+  public get id(): string {
+    return this.status.taskId + '_' + this.status.subtaskId;
+  }
+
   public get projectSettings(): Buffer | undefined {
     return this._projectSettings;
   }
+
   public get plateJson(): Buffer | undefined {
     return this._projectSettings;
   }
@@ -23,6 +29,10 @@ export class Job {
 
   public get gcodeThumbnail(): Buffer | undefined {
     return this._gcodeThumbnail;
+  }
+
+  public get latestThumbnail(): string | undefined {
+    return this._latestThumbnail;
   }
 
   public get zip(): JSZip | undefined {
@@ -51,6 +61,7 @@ export class Job {
 
   private _zip: JSZip | undefined;
   private _gcodeThumbnail?: Buffer;
+  private _latestThumbnail?: string;
   private _sliceInfo?: SliceInfo;
   private _modelSettings?: Buffer;
   private _projectSettings?: Buffer;
@@ -60,11 +71,11 @@ export class Job {
   private _prepareStatus: Status | undefined;
   private _finishStatus: Status | undefined;
 
-  public constructor(command: PushStatusCommand, ended = false) {
+  public constructor(command: PushStatusCommand, amsData?: Record<number, AMSRawData>, ended = false) {
     if (command.gcode_state === 'PREPARE') {
-      this._prepareStatus = getStatusFromCommand(command);
+      this._prepareStatus = getStatusFromCommand(command, amsData);
     } else if (command.gcode_state === 'FINISH') {
-      this._finishStatus = getStatusFromCommand(command);
+      this._finishStatus = getStatusFromCommand(command, amsData);
     }
 
     this._status = getStatusFromCommand(command);
@@ -86,15 +97,15 @@ export class Job {
     return this.status.speed.level;
   }
 
-  public updateStatus(command: PushStatusCommand) {
+  public updateStatus(command: PushStatusCommand, amsData?: Record<number, AMSRawData>) {
     const existingFinishTime = this._status.finishTime;
 
-    this._status = getStatusFromCommand(command);
+    this._status = getStatusFromCommand(command, amsData);
     this._status.finishTime = existingFinishTime;
   }
 
-  public end(command: PushStatusCommand) {
-    const status = getStatusFromCommand(command);
+  public end(command: PushStatusCommand, amsData?: Record<number, AMSRawData>) {
+    const status = getStatusFromCommand(command, amsData);
 
     status.finishTime = Date.now();
     this._status = status;
@@ -116,5 +127,9 @@ export class Job {
         this._zip.file('Metadata/project_settings.config')?.async('nodebuffer'),
         this._zip.file('Metadata/' + plate + '.json')?.async('nodebuffer'),
       ]);
+  }
+
+  public updateThumbnail(path: string): void {
+    this._latestThumbnail = path;
   }
 }

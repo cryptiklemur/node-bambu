@@ -12,17 +12,25 @@ export class MessageSenderService {
     contextOrChannel: CommandContext | TextChannel,
     content: MessageCreateOptions,
   ): Promise<Message<true>> {
-    if (contextOrChannel instanceof CommandContext) {
-      const message = await contextOrChannel.editOriginal({
-        content: content.content,
-        embeds: content.embeds as APIEmbed[],
-        components: content.components as unknown as ComponentActionRow[],
-        file: content.files as unknown as MessageFile[],
-      });
+    try {
+      if (contextOrChannel instanceof CommandContext) {
+        const message = await contextOrChannel.editOriginal({
+          content: content.content,
+          embeds: content.embeds as APIEmbed[],
+          components: content.components as unknown as ComponentActionRow[],
+          file: content.files as unknown as MessageFile[],
+        });
 
-      return this.discord.channels.fetch(message.channelID).then((x) => (x as TextChannel).messages.fetch(message.id));
+        return this.discord.channels
+          .fetch(message.channelID)
+          .then((x) => (x as TextChannel).messages.fetch(message.id));
+      }
+
+      return contextOrChannel.send(content);
+    } catch (error) {
+      console.error(error);
+
+      throw error;
     }
-
-    return contextOrChannel.send(content);
   }
 }

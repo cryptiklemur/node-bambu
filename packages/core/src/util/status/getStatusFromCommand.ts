@@ -5,8 +5,9 @@ import { getStageAsString } from './getStageAsString';
 import { getStream } from './getStream';
 import { getAmsFromCommand } from './getAmsFromCommand';
 import { parseHms } from './parseHms';
+import type { AMSRawData } from '../../interfaces/Status';
 
-export function getStatusFromCommand(data: PushStatusCommand): Status {
+export function getStatusFromCommand(data: PushStatusCommand, amsData?: Record<number, AMSRawData>): Status {
   function getSpeed(lvl: IntRange<1, 5>) {
     switch (lvl) {
       case 1: {
@@ -31,7 +32,7 @@ export function getStatusFromCommand(data: PushStatusCommand): Status {
   const remainingTime = data.mc_remaining_time * 60 * 1000;
 
   return {
-    amses: getAmsFromCommand(data.ams),
+    amses: getAmsFromCommand(data.ams, amsData),
     currentLayer: data.layer_num,
     maxLayers: data.total_layer_num,
     gcodeFile: data.gcode_file,

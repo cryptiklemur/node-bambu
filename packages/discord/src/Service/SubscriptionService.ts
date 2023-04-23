@@ -62,7 +62,7 @@ export class SubscriptionService {
 
     const message = await this.messageSender.sendMessage(channel, {
       content: '',
-      embeds: await this.statusService.buildEmbeds(printer, job.status),
+      embeds: await this.statusService.buildEmbeds(printer, job),
       components: this.statusService.buildComponents(printer),
       files: await this.statusService.buildFiles(job),
     });

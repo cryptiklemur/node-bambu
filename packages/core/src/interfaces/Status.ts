@@ -22,11 +22,17 @@ export interface AMSTray {
   weight: number;
 }
 
-export interface AMS {
+export interface AMS extends AMSRawData {
   humidity: number;
   id: number;
   temp: number;
   trays: [AMSTray | undefined, AMSTray | undefined, AMSTray | undefined, AMSTray | undefined];
+}
+
+export interface AMSRawData {
+  humidityIdx: number;
+  humidityPercent: number;
+  realTemp: number;
 }
 
 export interface HMS {

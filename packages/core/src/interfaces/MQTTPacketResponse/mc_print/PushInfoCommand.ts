@@ -21,7 +21,7 @@ export interface CleanPushInfoCommand {
 }
 
 export function getCleanPushInfoCommand(command: PushInfoCommand): CleanPushInfoCommand {
-  const [, category, subcategory, content] = command.param.match(/^\[(.+?)](?:\[(.+?)])?:\s*(.+)$/) ?? [];
+  const [, category, subcategory, content] = command.param.match(/^\[(.+?)](?:\[(.+?)])?\s*(.+)$/) ?? [];
 
   return {
     sequenceId: Number(command.sequence_id),

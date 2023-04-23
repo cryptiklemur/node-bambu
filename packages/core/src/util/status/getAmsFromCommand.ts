@@ -1,13 +1,17 @@
 import type { PushStatusCommand } from '../../interfaces/MQTTPacketResponse/print';
 import type { AMS, AMSTray } from '../../interfaces';
 import type { IntRange } from '../../types';
+import type { AMSRawData } from '../../interfaces/Status';
 
-export function getAmsFromCommand(data: PushStatusCommand['ams']): AMS[] {
+export function getAmsFromCommand(data: PushStatusCommand['ams'], amsData?: Record<number, AMSRawData>): AMS[] {
   return data.ams.map(
-    (ams) =>
+    (ams, index) =>
       ({
         id: Number(ams.id),
         humidity: Number(ams.humidity),
+        humidityPercent: amsData?.[index]?.humidityPercent,
+        humidityIdx: amsData?.[index]?.humidityIdx,
+        realTemp: amsData?.[index]?.realTemp,
         temp: Number(ams.temp),
         trays: [
           getAMSTrayFromCommand(ams.tray[0], data.tray_now === '0'),

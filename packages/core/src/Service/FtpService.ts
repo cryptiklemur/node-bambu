@@ -6,6 +6,7 @@ import * as fsp from 'node:fs/promises';
 import JSZip from 'JSZip';
 import type ftp from 'basic-ftp';
 import { FTPError } from 'basic-ftp';
+import { Mutex } from 'async-mutex';
 
 import type { PrinterStatus } from '../util/PrinterStatus';
 import type { BambuClient, BambuConfig } from '../BambuClient';
@@ -16,7 +17,7 @@ import { sleep } from '../util/sleep';
 export class FtpService {
   private tempDir: string;
   private connecting = false;
-  private taskRunning = false;
+  private mutex = new Mutex();
 
   public constructor(
     private bambu: BambuClient,
@@ -51,46 +52,42 @@ export class FtpService {
   }
 
   public async connect() {
-    if (this.connecting || !this.ftp.closed || this.taskRunning) {
+    if (this.connecting || !this.ftp.closed) {
       return;
     }
 
     this.connecting = true;
-    this.taskRunning = true;
 
-    return this.ftp
-      .access({
-        host: this.config.host,
-        port: 990,
-        user: 'bblp',
-        password: this.config.token,
-        secure: 'implicit',
-        secureOptions: {
-          timeout: 5 * 1000,
-          sessionTimeout: 30 * 60 * 1000,
-          rejectUnauthorized: false,
-        },
-      })
-      .then((x) => {
-        this.taskRunning = false;
-        this.connecting = false;
+    return this.runTask(() =>
+      this.ftp
+        .access({
+          host: this.config.host,
+          port: 990,
+          user: 'bblp',
+          password: this.config.token,
+          secure: 'implicit',
+          secureOptions: {
+            timeout: 5 * 1000,
+            sessionTimeout: 30 * 60 * 1000,
+            rejectUnauthorized: false,
+          },
+        })
+        .then((x) => {
+          this.connecting = false;
 
-        return x;
-      });
+          return x;
+        }),
+    );
   }
 
   private async cleanUpTempDir(job: Job) {
     const threemfFileName = job.status.subtaskName.replace(/\.3mf$/, '') + '.3mf';
     const latestThumbnailFilename = `latest-thumbnail-${job.id}.jpg`;
 
-    await Promise.all([fsp.unlink(threemfFileName), fsp.unlink(latestThumbnailFilename)]);
+    await Promise.all([fsp.unlink(threemfFileName).catch(void 0), fsp.unlink(latestThumbnailFilename).catch(void 0)]);
   }
 
   private async tryFetchLatestThumbnail(job: Job): Promise<void> {
-    if (this.taskRunning) {
-      return;
-    }
-
     try {
       if (this.ftp.closed) {
         await this.connect();
@@ -116,7 +113,7 @@ export class FtpService {
   }
 
   private async tryFetch3MF(job: Job): Promise<void> {
-    if (this.taskRunning || job.status.printType === 'local') {
+    if (job.status.printType === 'local') {
       return;
     }
 
@@ -152,24 +149,7 @@ export class FtpService {
     }
   }
 
-  private async awaitTask() {
-    do {
-      if (!this.taskRunning) {
-        return;
-      }
-
-      await sleep(100);
-      // eslint-disable-next-line no-constant-condition,@typescript-eslint/no-unnecessary-condition
-    } while (true);
-  }
-
   private async runTask<T>(callback: () => Promise<T>) {
-    await this.awaitTask();
-    this.taskRunning = true;
-    const response = await callback();
-
-    this.taskRunning = false;
-
-    return response;
+    return this.mutex.runExclusive(callback);
   }
 }

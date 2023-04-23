@@ -315,8 +315,6 @@ ${ams.trays
       return undefined;
     }
 
-    this.logger.info('New files uploaded');
-
     return toJson ? (files.map((x) => x.toJSON()) as Attachment[]) : files;
   }
 

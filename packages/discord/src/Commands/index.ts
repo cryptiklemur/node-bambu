@@ -6,10 +6,12 @@ import { UnsubscribeCommand } from './UnsubscribeCommand';
 import { TemperatureCommand } from './TemperatureCommand';
 import { SpeedCommand } from './SpeedCommand';
 import { StateCommand } from './StateCommand';
+import { LightCommand } from './LightCommand';
 
 export { AbstractCommand } from './AbstractCommand';
 export { BaseStatusCommand } from './BaseStatusCommand';
 
+export { LightCommand } from './LightCommand';
 export { PermanentStatusCommand } from './PermanentStatusCommand';
 export { PrinterCommand } from './PrinterCommand';
 export { SpeedCommand } from './SpeedCommand';
@@ -20,6 +22,7 @@ export { TemperatureCommand } from './TemperatureCommand';
 export { UnsubscribeCommand } from './UnsubscribeCommand';
 
 export const Commands = [
+  LightCommand,
   PermanentStatusCommand,
   PrinterCommand,
   SpeedCommand,

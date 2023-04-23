@@ -54,8 +54,6 @@ export abstract class AbstractCommand extends SlashCommand<Client> {
 
     const printer = this.requiresPrinter ? this.getPrinterFromContext(context) : undefined;
 
-    console.log(printer?.printer.owners);
-
     if (printer && !printer.printer.owners.some((x) => x.id === context.user.id)) {
       return context.send(`You do not have permissions to run this against that printer (${printer.printer.name}).`);
     }

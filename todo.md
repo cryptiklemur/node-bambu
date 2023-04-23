@@ -7,12 +7,12 @@
 - Add commands:
 
   - Set Temps
-    - Chamber
+    - Chamber (Set temperature of the bed, wait for the chamber to raise, then lower the temp of the bed to the chamber temp?)
   - Lights
-    - Toggle Chamber
-    - Toggle Work
-    - Toggle Logo
-    - Toggle Nozzle
+    - Toggle Chamber (Allow for flashing)
+    - Toggle Work (Allow for flashing)
+    - Toggle Logo (Can't get logo state)
+    - Toggle Nozzle (Can't get Nozzle state)
   - Fan
     - Set Part Cooling Speed
     - Set Aux Speed

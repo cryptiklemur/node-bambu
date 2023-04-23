@@ -15,7 +15,7 @@ import type { Logger } from '../interfaces';
 import { sleep } from '../util/sleep';
 
 export class FtpService {
-  private tempDir: string;
+  private readonly tempDir: string;
   private connecting = false;
   private mutex = new Mutex();
 
@@ -84,7 +84,10 @@ export class FtpService {
     const threemfFileName = job.status.subtaskName.replace(/\.3mf$/, '') + '.3mf';
     const latestThumbnailFilename = `latest-thumbnail-${job.id}.jpg`;
 
-    await Promise.all([fsp.unlink(threemfFileName).catch(void 0), fsp.unlink(latestThumbnailFilename).catch(void 0)]);
+    await Promise.all([
+      fsp.unlink(threemfFileName).catch(() => void 0),
+      fsp.unlink(latestThumbnailFilename).catch(() => void 0),
+    ]);
   }
 
   private async tryFetchLatestThumbnail(job: Job): Promise<void> {

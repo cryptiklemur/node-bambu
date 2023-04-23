@@ -1,9 +1,10 @@
 import type { CommandContext } from 'slash-create';
 import { DataSource } from 'typeorm';
-import { CommandOptionType, SlashCommandOptions, SlashCreator } from 'slash-create';
+import { SlashCommandOptions, SlashCreator } from 'slash-create';
 import { inject } from 'inversify';
 
 import { BaseStatusCommand } from './BaseStatusCommand';
+import type { BambuRepositoryItem } from '../Repository/BambuRepository';
 import { BambuRepository } from '../Repository/BambuRepository';
 import { StatusService } from '../Service/StatusService';
 import { SubscriptionService } from '../Service/SubscriptionService';
@@ -19,26 +20,14 @@ export class SubscribeCommand extends BaseStatusCommand {
     @inject('discord.slash-creator-options') options: SlashCommandOptions,
   ) {
     super(database, creator, bambuRepository, status, {
+      ...options,
       name: 'subscribe',
       description: 'Subscribes the current channel to posts from the bot when a print starts',
-      options: [
-        {
-          name: 'printer',
-          description: 'Printer to check',
-          type: CommandOptionType.STRING,
-          autocomplete: true,
-        },
-      ],
+      options: [BaseStatusCommand.PRINTER_OPTION],
     });
   }
 
-  public override async run(context: CommandContext) {
-    if (!(await this.isPrinterOptionRequiredAndSet(context))) {
-      return context.send('You must specify a printer with this command.');
-    }
-
-    const printer = this.getPrinterFromContext(context);
-
+  public override async runCommand(context: CommandContext, printer?: BambuRepositoryItem) {
     if (!printer) {
       return context.send('Could not find that printer.');
     }

@@ -7,7 +7,18 @@ import { decimalToFixedSizeHexTwosComplement } from '../decimalToFixedSizeHexTwo
 
 const cache: Record<string, string> = {};
 
-async function tryFetchDescription(url: string): Promise<string> {
+const attempts: Record<string, number> = {};
+
+const fallbacks: Record<string, string | undefined> = {
+  '0300_0100_0003_0008':
+    'The temperature of the heated bed exceeds the limit and automatically adjusts to the limit temperature.',
+};
+
+async function tryFetchDescription(url: string, code: string): Promise<string> {
+  if (attempts[url] > 5 || fallbacks[code]) {
+    return fallbacks[code] ?? code;
+  }
+
   if (cache[url]) {
     return cache[url];
   }
@@ -27,9 +38,15 @@ async function tryFetchDescription(url: string): Promise<string> {
 
     return '';
   } catch (error) {
+    if (attempts[url]) {
+      attempts[url]++;
+    } else {
+      attempts[url] = 1;
+    }
+
     console.error('Error fetching URL:', (error as Error).message);
 
-    return '';
+    return fallbacks[code] ?? code;
   }
 }
 
@@ -48,7 +65,11 @@ export function parseHms(hms?: RawHMS[]): HMS[] {
     fullCode = fullCode.slice(0, Math.max(0, fullCode.length - 1));
     const url = 'https://wiki.bambulab.com/en/x1/troubleshooting/hmscode/' + fullCode;
 
-    result.push({ code: `HMS_${fullCode}`, url: url, description: tryFetchDescription(url) });
+    result.push({
+      code: `HMS_${fullCode}`,
+      url: fallbacks[fullCode] ? undefined : url,
+      description: tryFetchDescription(url, fullCode),
+    });
   }
 
   return result;

@@ -37,8 +37,8 @@ export interface AMSRawData {
 
 export interface HMS {
   code: `HMS_${string}`;
-  description: Promise<string>;
-  url: string;
+  description: Promise<string | undefined>;
+  url: string | undefined;
 }
 
 export interface Status {

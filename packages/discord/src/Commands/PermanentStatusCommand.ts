@@ -1,5 +1,4 @@
 import type { CommandContext, SlashCreator } from 'slash-create';
-import { CommandOptionType } from 'slash-create';
 import type { DataSource } from 'typeorm';
 
 import { BaseStatusCommand } from './BaseStatusCommand';
@@ -16,22 +15,11 @@ export class PermanentStatusCommand extends BaseStatusCommand {
     super(database, creator, bambuRepository, status, {
       name: 'perm-status',
       description: 'Replies with the current status of the printer. Continues to update it.',
-      options: [
-        {
-          name: 'printer',
-          description: 'Printer to check',
-          type: CommandOptionType.STRING,
-          autocomplete: true,
-        },
-      ],
+      options: [BaseStatusCommand.PRINTER_OPTION],
     });
   }
 
-  public override async run(context: CommandContext) {
-    if (!(await this.isPrinterOptionRequiredAndSet(context))) {
-      return context.send('You must specify a printer with this command.');
-    }
-
+  public override async runCommand(context: CommandContext) {
     return this.status.sendStatusMessage('permanent', context);
   }
 }

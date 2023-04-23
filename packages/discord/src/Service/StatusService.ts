@@ -190,8 +190,8 @@ export class StatusService {
           {
             name: 'Temps',
             value:
-              `\`Bed:\` ${status.temperatures.bed.target}°C/${status.temperatures.bed.actual}°C\n` +
-              `\`Nozzle:\` ${status.temperatures.extruder.target}°C/${status.temperatures.extruder.actual}°C\n` +
+              `\`Bed:\` ${status.temperatures.bed.actual}°C/${status.temperatures.bed.target}°C\n` +
+              `\`Nozzle:\` ${status.temperatures.extruder.actual}°C/${status.temperatures.extruder.target}°C\n` +
               `\`Chamber:\` ${status.temperatures.chamber.actual}°C\n` +
               status.temperatures.amses
                 .map((ams, index) => `\`AMS ${index + 1}:\` ${status.temperatures.amses[index].actual}°C`)
@@ -226,7 +226,13 @@ ${ams.trays
             ? {
                 name: 'Errors',
                 value: await Promise.all(
-                  status.hms.map(async (x, index) => `\`${index + 1}:\` [${await x.description}](${x.url})`),
+                  status.hms.map(async (x, index) => {
+                    if (x.url) {
+                      return `\`${index + 1}:\` [${(await x.description) ?? x.code}](${x.url})`;
+                    }
+
+                    return `\`${index + 1}:\` ${(await x.description) ?? x.code}`;
+                  }),
                 ).then((x) => x.join('\n')),
               }
             : undefined,
@@ -303,11 +309,16 @@ ${ams.trays
 
     const plate = job.status.gcodeFile.replace(/\/data\/Metadata\//, '').replace(/\.gcode$/, '');
 
-    if (job.gcodeThumbnail && !message?.embeds[0]?.thumbnail?.url) {
+    const hasAttachments =
+      message?.embeds[0]?.thumbnail?.url &&
+      job.latestThumbnail &&
+      message.embeds[0]?.image?.url.includes(path.basename(job.latestThumbnail));
+
+    if (job.gcodeThumbnail && (!hasAttachments || (!job.latestThumbnail && !message.embeds[0]?.thumbnail?.url))) {
       files.push(new AttachmentBuilder(job.gcodeThumbnail, { name: `${plate}.png` }));
     }
 
-    if (job.latestThumbnail && !message?.embeds[0]?.image?.url.includes(path.basename(job.latestThumbnail))) {
+    if (job.latestThumbnail && !hasAttachments) {
       files.push(new AttachmentBuilder(job.latestThumbnail, { name: path.basename(job.latestThumbnail) }));
     }
 

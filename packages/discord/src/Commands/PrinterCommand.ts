@@ -9,6 +9,8 @@ import { Printer } from '../Entity/Printer';
 
 @injectable()
 export class PrinterCommand extends AbstractCommand {
+  protected override requiresPrinter = false;
+
   constructor(
     @inject('database') database: DataSource,
     @inject('discord.slash-creator') creator: SlashCreator,
@@ -16,6 +18,7 @@ export class PrinterCommand extends AbstractCommand {
     @inject('discord.slash-creator-options') options: SlashCommandOptions,
   ) {
     super(database, creator, bambuRepository, {
+      ...options,
       name: 'printer',
       description: 'Manage printers on this bot',
       deferEphemeral: true,
@@ -94,7 +97,7 @@ export class PrinterCommand extends AbstractCommand {
     });
   }
 
-  public override async autocomplete(context: AutocompleteContext): Promise<any> {
+  public override async autocomplete(context: AutocompleteContext) {
     if (context.subcommands[0] !== 'remove') {
       return super.autocomplete(context);
     }
@@ -112,7 +115,7 @@ export class PrinterCommand extends AbstractCommand {
     }));
   }
 
-  public override async run(context: CommandContext) {
+  public override async runCommand(context: CommandContext) {
     const owner = await this.getOwner(context);
 
     switch (context.subcommands[0]) {

@@ -3,15 +3,16 @@ import type { MqttClient } from 'mqtt';
 import * as events from 'eventemitter3';
 import * as ftp from 'basic-ftp';
 
-import { GET_VERSION, PUSH_ALL } from './Commands';
 import { isPrintMessage, isPushStatusCommand } from './interfaces/MQTTPacketResponse/print';
-import type { GetVersionCommand } from './interfaces/MQTTPacketResponse/info';
+import type { GetVersionCommand as GetVersionCommandInterface } from './interfaces/MQTTPacketResponse/info';
 import { isGetVersionCommand, isInfoMessage } from './interfaces/MQTTPacketResponse/info';
 import { getCleanPushInfoCommand, isMCPrintMessage, isPushInfoCommand } from './interfaces/MQTTPacketResponse/mc_print';
 import { PrinterStatus } from './util/PrinterStatus';
 import type { BambuClientEvents, Device, Logger } from './interfaces';
 import { ConsoleLogger } from './util/ConsoleLogger';
 import { FtpService } from './Service/FtpService';
+import type { CommandInterface } from './Commands';
+import { GetVersionCommand, PushAllCommand } from './Commands';
 
 export interface BambuConfig {
   debugFtp?: boolean;
@@ -28,7 +29,7 @@ export class BambuClient extends events.EventEmitter<keyof BambuClientEvents> {
   }
 
   public readonly ftp: ftp.Client = new ftp.Client(2 * 60 * 1000);
-  public readonly printerStatus;
+  public readonly printerStatus: PrinterStatus;
   protected mqttClient: mqtt.MqttClient | undefined;
   protected device: Device | undefined;
   protected logger: Logger;
@@ -140,6 +141,7 @@ export class BambuClient extends events.EventEmitter<keyof BambuClientEvents> {
       const topic = `device/${this.config.serial}/request`;
 
       this.mqttClient.publish(topic, message_, (error) => {
+        this.logger.debug('Published message: ', { topic, message: message_, error });
         this.emit('published', topic, message_, error);
 
         if (error) {
@@ -152,6 +154,10 @@ export class BambuClient extends events.EventEmitter<keyof BambuClientEvents> {
     });
   }
 
+  public async executeCommand(command: CommandInterface): Promise<void> {
+    return command.invoke(this);
+  }
+
   protected async onConnect(packet: mqtt.IConnackPacket): Promise<void> {
     this.emit('connected', packet);
 
@@ -159,9 +165,9 @@ export class BambuClient extends events.EventEmitter<keyof BambuClientEvents> {
     this.logger.silly?.('onConnect: Subscribing to device report');
     await this.subscribe(`device/${this.config.serial}/report`);
     this.logger.silly?.('onConnect: Getting version info');
-    await this.publish(GET_VERSION);
+    await this.executeCommand(new GetVersionCommand());
     this.logger.silly?.('onConnect: Request Push All');
-    await this.publish(PUSH_ALL);
+    await this.executeCommand(new PushAllCommand());
   }
 
   protected async onMessage(packet: string) {
@@ -172,7 +178,7 @@ export class BambuClient extends events.EventEmitter<keyof BambuClientEvents> {
     this.logger.silly?.('onMessage: ', { key, data: JSON.stringify(data[key]) });
 
     if (isInfoMessage(data)) {
-      this.emit(`command:${data.info.command}`, data.info as GetVersionCommand);
+      this.emit(`command:${data.info.command}`, data.info as GetVersionCommandInterface);
 
       if (isGetVersionCommand(data.info)) {
         this.device = data.info;

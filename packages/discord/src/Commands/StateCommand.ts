@@ -1,14 +1,14 @@
 import type { CommandContext, SlashCreator } from 'slash-create';
 import { CommandOptionType } from 'slash-create';
 import type { DataSource } from 'typeorm';
-import type { types } from '@node-bambu/core';
 import { Commands } from '@node-bambu/core';
+import type { interfaces } from '@node-bambu/core';
 
 import { BaseStatusCommand } from './BaseStatusCommand';
 import type { BambuRepository, BambuRepositoryItem } from '../Repository/BambuRepository';
 import type { StatusService } from '../Service/StatusService';
 
-export class SpeedCommand extends BaseStatusCommand {
+export class StateCommand extends BaseStatusCommand {
   public constructor(
     database: DataSource,
     creator: SlashCreator,
@@ -16,26 +16,26 @@ export class SpeedCommand extends BaseStatusCommand {
     status: StatusService,
   ) {
     super(database, creator, bambuRepository, status, {
-      name: 'speed',
-      description: 'Manages speed on a printer',
+      name: 'state',
+      description: 'Manage the state of the printer',
       options: [
         {
           name: 'get',
-          description: 'Returns speed',
+          description: 'Returns state information',
           type: CommandOptionType.SUB_COMMAND,
           options: [BaseStatusCommand.PRINTER_OPTION],
         },
         {
           name: 'set',
-          description: 'Sets speed',
+          description: 'Sets state information',
           type: CommandOptionType.SUB_COMMAND,
           options: [
             {
-              name: 'speed',
-              description: 'Speed to set',
+              name: 'state',
+              description: 'State to set',
               type: CommandOptionType.STRING,
+              choices: ['pause', 'resume', 'stop'].map((x) => ({ name: x, value: x })),
               required: true,
-              choices: ['Silent', 'Standard', 'Sport', 'Ludicrous'].map((x) => ({ name: x, value: x.toLowerCase() })),
             },
             BaseStatusCommand.PRINTER_OPTION,
           ],
@@ -55,30 +55,46 @@ export class SpeedCommand extends BaseStatusCommand {
 
     switch (context.subcommands[0]) {
       case 'get': {
-        return this.getSpeed(context, printer);
+        return this.getState(context, printer);
       }
 
       case 'set': {
-        return this.setSpeed(context, printer);
+        return this.setState(context, printer);
       }
     }
 
     return context.send('How did i get here');
   }
 
-  private async getSpeed(context: CommandContext, printer: BambuRepositoryItem) {
-    const speed = printer.client.printerStatus.latestStatus?.speed;
+  private async getState(context: CommandContext, printer: BambuRepositoryItem) {
+    const stateMap: Record<interfaces.Status['state'], string> = {
+      PAUSE: 'paused',
+      PREPARE: 'preparing',
+      FINISH: 'finished',
+      IDLE: 'idle',
+      RUNNING: 'printing',
+    };
 
-    return context.send(`Current speed for the printer is \`${speed?.name} (${speed?.percent}%)\``);
+    return context.send(
+      `Current state for the printer is \`${stateMap[printer.client.printerStatus.latestStatus?.state ?? 'IDLE']}\``,
+    );
   }
 
-  private async setSpeed(context: CommandContext, printer: BambuRepositoryItem) {
-    const speed = context.options['set'].speed as 'silent' | 'standard' | 'sport' | 'ludicrous';
-    const speedMap = { silent: 1, standard: 2, sport: 3, ludicrous: 4 };
-    const speedPercentMap = { silent: 50, standard: 100, sport: 124, ludicrous: 166 };
+  private async setState(context: CommandContext, printer: BambuRepositoryItem) {
+    const state = context.options['set'].state as 'pause' | 'resume' | 'stop';
 
-    await printer.client.executeCommand(new Commands.UpdateSpeedCommand(speedMap[speed] as types.IntRange<1, 5>));
+    await printer.client.executeCommand(new Commands.UpdateStateCommand(state));
 
-    return context.send(`Speed set to \`${speed} (${speedPercentMap[speed]}%)\``);
+    switch (state) {
+      case 'pause': {
+        return context.send(`Pausing the print`);
+      }
+      case 'resume': {
+        return context.send('Resuming the print');
+      }
+      case 'stop': {
+        return context.send('Stopping the print');
+      }
+    }
   }
 }

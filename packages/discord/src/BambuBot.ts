@@ -92,7 +92,13 @@ export class BambuBot {
           }),
       )
       .onActivation((context, creator) => {
-        return creator.on('error', (error) => context.container.get<interfaces.Logger>('logger').error(error));
+        const logger = context.container.get<interfaces.Logger>('logger');
+
+        return creator
+          .on('commandError', (command, error) => logger.error('SlashCommand Command Error: ', { command, error }))
+          .on('warn', (warning) => logger.warn('SlashCommand Warning: ', { warning }))
+          .on('debug', (message) => logger.debug('SlashCommand Debug: ', { message }))
+          .on('error', (error) => logger.error('SlashCommand Error: ', { error }));
       });
 
     this.container.bind<DataSource>('database').toDynamicValue(this.getDataSource.bind(this));

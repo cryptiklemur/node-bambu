@@ -59,7 +59,7 @@ export class Printer {
   @OneToMany(() => Subscription, (subscription) => subscription.printer)
   public subscriptions: Subscription[];
 
-  @ManyToMany(() => Owner)
+  @ManyToMany(() => Owner, { eager: true })
   @JoinTable()
   public owners: Owner[];
 

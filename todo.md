@@ -8,9 +8,6 @@
 
   - Set Temps
     - Chamber
-  - Print
-    - Pause/Resume
-    - Stop
   - Lights
     - Toggle Chamber
     - Toggle Work

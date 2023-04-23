@@ -80,7 +80,7 @@ export class InteractionHandler {
       return;
     }
 
-    await printer.client.publish(Commands.UPDATE_SPEED(newSpeed));
+    await printer.client.executeCommand(new Commands.UpdateSpeedCommand(newSpeed));
   }
   private async toggleLights(interaction: ButtonInteraction, printer: BambuRepositoryItem) {
     const lightMode = printer.client.printerStatus.latestStatus?.lights.find((x) => x.name === 'chamber_light')?.mode;
@@ -91,7 +91,7 @@ export class InteractionHandler {
       return;
     }
 
-    await printer.client.publish(Commands.UPDATE_CHAMBER_LIGHT(lightMode === 'on' ? 'off' : 'on'));
+    await printer.client.executeCommand(new Commands.UpdateChamberLightCommand(lightMode === 'on' ? 'off' : 'on'));
   }
   private async togglePrintStatus(interaction: ButtonInteraction, printer: BambuRepositoryItem) {
     const state = printer.client.printerStatus.currentJob?.getState();
@@ -102,7 +102,7 @@ export class InteractionHandler {
       return;
     }
 
-    await printer.client.publish(Commands.UPDATE_STATE(state === 'PAUSE' ? 'resume' : 'pause'));
+    await printer.client.executeCommand(new Commands.UpdateStateCommand(state === 'PAUSE' ? 'resume' : 'pause'));
   }
   private async stopPrint(interaction: ButtonInteraction, printer: BambuRepositoryItem) {
     if (!printer.client.printerStatus.currentJob) {
@@ -111,6 +111,6 @@ export class InteractionHandler {
       return;
     }
 
-    await printer.client.publish(Commands.UPDATE_STATE('stop'));
+    await printer.client.executeCommand(new Commands.UpdateStateCommand('stop'));
   }
 }

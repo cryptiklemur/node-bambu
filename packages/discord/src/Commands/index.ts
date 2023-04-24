@@ -8,6 +8,7 @@ import { SpeedCommand } from './SpeedCommand';
 import { StateCommand } from './StateCommand';
 import { LightCommand } from './LightCommand';
 import { FanCommand } from './FanCommand';
+import { VersionCommand } from './VersionCommand';
 
 export { AbstractCommand } from './AbstractCommand';
 export { BaseStatusCommand } from './BaseStatusCommand';
@@ -22,6 +23,7 @@ export { StatusCommand } from './StatusCommand';
 export { SubscribeCommand } from './SubscribeCommand';
 export { TemperatureCommand } from './TemperatureCommand';
 export { UnsubscribeCommand } from './UnsubscribeCommand';
+export { VersionCommand } from './VersionCommand';
 
 export const Commands = [
   FanCommand,
@@ -34,4 +36,5 @@ export const Commands = [
   SubscribeCommand,
   TemperatureCommand,
   UnsubscribeCommand,
+  VersionCommand,
 ];

@@ -28,12 +28,17 @@ export class BambuClient extends events.EventEmitter<keyof BambuClientEvents> {
     return this.mqttClient?.connected ?? false;
   }
 
+  public get device(): Device | undefined {
+    return this._device;
+  }
+
   public readonly ftp: ftp.Client = new ftp.Client(2 * 60 * 1000);
   public readonly printerStatus: PrinterStatus;
   protected mqttClient: mqtt.MqttClient | undefined;
-  protected device: Device | undefined;
   protected logger: Logger;
   protected ftpService: FtpService;
+
+  private _device: Device | undefined;
 
   public constructor(public readonly config: BambuConfig) {
     super();
@@ -164,7 +169,7 @@ export class BambuClient extends events.EventEmitter<keyof BambuClientEvents> {
     this.logger.debug('onConnect: Connected to printer');
     this.logger.silly?.('onConnect: Subscribing to device report');
     await this.subscribe(`device/${this.config.serial}/report`);
-    this.logger.silly?.('onConnect: Getting version info');
+    this.logger.debug('onConnect: Getting version info');
     await this.executeCommand(new GetVersionCommand());
     this.logger.silly?.('onConnect: Request Push All');
     await this.executeCommand(new PushAllCommand());
@@ -181,7 +186,14 @@ export class BambuClient extends events.EventEmitter<keyof BambuClientEvents> {
       this.emit(`command:${data.info.command}`, data.info as GetVersionCommandInterface);
 
       if (isGetVersionCommand(data.info)) {
-        this.device = data.info;
+        this._device = {
+          modules: data.info.module.map((module) => ({
+            hardwareVersion: module.hw_ver,
+            name: module.name,
+            serialNumber: module.sn,
+            softwareVersion: module.sw_ver,
+          })),
+        };
       }
     }
 

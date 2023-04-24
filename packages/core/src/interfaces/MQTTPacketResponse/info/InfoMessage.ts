@@ -8,5 +8,5 @@ export type InfoMessageCommand = { command: InfoMessageCommands } & Record<strin
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isInfoMessage(data: any): data is InfoMessage {
-  return !!data?.info && !!data?.info?.command && ['info'].includes(data.info.command);
+  return !!data?.info && !!data?.info?.command && ['get_version'].includes(data.info.command);
 }

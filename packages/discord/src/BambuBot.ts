@@ -97,7 +97,7 @@ export class BambuBot {
         return creator
           .on('commandError', (command, error) => logger.error('SlashCommand Command Error: ', { command, error }))
           .on('warn', (warning) => logger.warn('SlashCommand Warning: ', { warning }))
-          .on('debug', (message) => logger.debug('SlashCommand Debug: ', { message }))
+          .on('debug', (message) => logger.silly?.('SlashCommand Debug: ', { message }))
           .on('error', (error) => logger.error('SlashCommand Error: ', { error }));
       });
 

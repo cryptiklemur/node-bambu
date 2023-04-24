@@ -1,3 +1,10 @@
-import type { GetVersionCommand } from './MQTTPacketResponse/info';
+export interface Module {
+  hardwareVersion?: string;
+  name: string;
+  serialNumber: string;
+  softwareVersion?: string;
+}
 
-export type Device = GetVersionCommand;
+export interface Device {
+  modules: Module[];
+}

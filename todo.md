@@ -13,7 +13,6 @@
     - Toggle Work (Allow for flashing)
     - Toggle Logo (Can't get logo state)
     - Toggle Nozzle (Can't get Nozzle state)
-  - Fetch Versions of Printer and AMSes
   - Configuration commands
     - Toggle automatically resuming when pausing due to non-lidar bed
     - Toggle automatically resuming when pausing due to untagged bed

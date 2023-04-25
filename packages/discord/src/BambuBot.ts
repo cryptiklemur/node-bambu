@@ -95,10 +95,16 @@ export class BambuBot {
         const logger = context.container.get<interfaces.Logger>('logger');
 
         return creator
-          .on('commandError', (command, error) => logger.error('SlashCommand Command Error: ', { command, error }))
-          .on('warn', (warning) => logger.warn('SlashCommand Warning: ', { warning }))
-          .on('debug', (message) => logger.silly?.('SlashCommand Debug: ', { message }))
-          .on('error', (error) => logger.error('SlashCommand Error: ', { error }));
+          .on('commandError', (command, error) => logger.error(error, { error, label: 'SlashCommand' }))
+          .on('warn', (warning) => {
+            if (warning instanceof Error) {
+              logger.error(warning, { label: 'SlashCommand' });
+            } else {
+              logger.warn(warning, { label: 'SlashCommand' });
+            }
+          })
+          .on('debug', (message) => logger.silly?.(message, { label: 'SlashCommand' }))
+          .on('error', (error) => logger.error(error, { label: 'SlashCommand' }));
       });
 
     this.container.bind<DataSource>('database').toDynamicValue(this.getDataSource.bind(this));

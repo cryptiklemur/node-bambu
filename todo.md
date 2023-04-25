@@ -13,8 +13,8 @@
     - Toggle Work (Allow for flashing)
     - Toggle Logo (Can't get logo state)
     - Toggle Nozzle (Can't get Nozzle state)
-  - Configuration commands
-    - Toggle automatically resuming when pausing due to non-lidar bed
-    - Toggle automatically resuming when pausing due to untagged bed
 
 - Mention owners when there is a new HMS error for them
+
+- Attach the files to the status messages better
+  - Only attach files if they need to

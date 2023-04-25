@@ -43,7 +43,7 @@ export class BambuClient extends events.EventEmitter<keyof BambuClientEvents> {
   public constructor(public readonly config: BambuConfig) {
     super();
 
-    this.logger = config.logger ?? new ConsoleLogger();
+    this.logger = config.logger ?? new ConsoleLogger({ label: 'Bambu' });
     this.printerStatus = new PrinterStatus(this);
     this.ftpService = new FtpService(this, this.ftp, this.printerStatus, this.logger, this.config);
   }
@@ -146,7 +146,7 @@ export class BambuClient extends events.EventEmitter<keyof BambuClientEvents> {
       const topic = `device/${this.config.serial}/request`;
 
       this.mqttClient.publish(topic, message_, (error) => {
-        this.logger.debug('Published message: ', { topic, message: message_, error });
+        this.logger.silly?.('Published message: ', { topic, message: message_, error });
         this.emit('published', topic, message_, error);
 
         if (error) {
@@ -166,12 +166,12 @@ export class BambuClient extends events.EventEmitter<keyof BambuClientEvents> {
   protected async onConnect(packet: mqtt.IConnackPacket): Promise<void> {
     this.emit('connected', packet);
 
-    this.logger.debug('onConnect: Connected to printer');
-    this.logger.silly?.('onConnect: Subscribing to device report');
+    this.logger.silly?.('Connected to printer');
+    this.logger.debug('Subscribing to device report');
     await this.subscribe(`device/${this.config.serial}/report`);
-    this.logger.debug('onConnect: Getting version info');
+    this.logger.debug('Getting version info');
     await this.executeCommand(new GetVersionCommand());
-    this.logger.silly?.('onConnect: Request Push All');
+    this.logger.silly?.('Request Push All');
     await this.executeCommand(new PushAllCommand());
   }
 
@@ -245,10 +245,10 @@ export class BambuClient extends events.EventEmitter<keyof BambuClientEvents> {
 
   private async connectToFTP() {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    this.ftp.ftp.log = this.logger.silly ?? (() => {});
+    this.ftp.ftp.log = this.logger.silly?.bind(this.logger) ?? (() => {});
 
     this.ftp.trackProgress((info) => {
-      this.logger.silly?.('FTP Progress: ', info);
+      this.logger.silly?.('FTP Progress: ', { ...info, label: 'Bambu:FTP' });
     });
 
     setInterval(() => {

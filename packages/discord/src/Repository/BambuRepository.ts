@@ -58,6 +58,7 @@ export class BambuRepository extends Map<string, BambuRepositoryItem> {
         port: printer.port,
         serial: printer.serialNumber,
         token: printer.token,
+        logger: this.logger,
       });
 
       client.on('connected', () => {

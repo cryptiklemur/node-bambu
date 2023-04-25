@@ -129,7 +129,7 @@ export class FtpService {
 
       const fileName = job.status.subtaskName.replace(/\.3mf$/, '') + '.3mf';
 
-      this.logger.info(`Fetching ${fileName} from ftp`);
+      this.logger.debug(`Fetching ${fileName} from ftp`);
       await this.runTask(() => this.ftp.downloadTo(path.resolve(this.tempDir, fileName), '/cache/' + fileName));
 
       const zip = new JSZip();

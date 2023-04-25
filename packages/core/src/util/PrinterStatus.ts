@@ -12,6 +12,10 @@ export class PrinterStatus {
   }
 
   private set currentJob(value: Job | undefined) {
+    if (!!this.currentJob && !!value && this.currentJob.id === value.id) {
+      return;
+    }
+
     this._currentJob = value;
 
     if (this._currentJob) {

@@ -1,0 +1,33 @@
+{
+  "name": "@node-bambu/twitch",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/twitch/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:swc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/twitch",
+        "main": "packages/twitch/src/index.ts",
+        "tsConfig": "packages/twitch/tsconfig.lib.json",
+        "assets": ["packages/twitch/*.md"]
+      }
+    },
+    "publish": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node tools/scripts/publish.mjs @node-bambu/twitch {args.ver} {args.tag}"
+      },
+      "dependsOn": ["build"]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["packages/twitch/**/*.ts"]
+      }
+    }
+  },
+  "tags": []
+}

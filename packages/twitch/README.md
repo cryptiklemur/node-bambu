@@ -1,6 +1,6 @@
-# @node-bambu/discord
+# @node-bambu/twitch
 
-[![npm (scoped)](https://img.shields.io/npm/v/@node-bambu/discord)](https://www.npmjs.com/package/@node-bambu/discord)
+[![npm (scoped)](https://img.shields.io/npm/v/@node-bambu/twitch)](https://www.npmjs.com/package/@node-bambu/twitch)
 
 ## Testing
 

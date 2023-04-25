@@ -38,7 +38,9 @@ export abstract class AbstractCommand extends SlashCommand<Client> {
     const printers = await this.database
       .getRepository(Printer)
       .createQueryBuilder('printer')
-      .where(`LOWER(printer.name LIKE :name`, { name: `%${context.options['printer'].toLowerCase()}%` })
+      .leftJoinAndSelect('printer.owners', 'owner')
+      .where(`LOWER(printer.name) LIKE :name`, { name: `%${context.options['printer'].toLowerCase()}%` })
+      .andWhere('owner.id = :owner', { owner: context.user.id })
       .getMany();
 
     return printers.map((x) => ({

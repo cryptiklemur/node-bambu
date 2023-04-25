@@ -14,7 +14,7 @@ export class MessageSenderService {
   ): Promise<Message<true>> {
     try {
       if (contextOrChannel instanceof CommandContext) {
-        const message = await contextOrChannel.editOriginal({
+        const message = await contextOrChannel.sendFollowUp({
           content: content.content,
           embeds: content.embeds as APIEmbed[],
           components: content.components as unknown as ComponentActionRow[],

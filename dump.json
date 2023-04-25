@@ -1,0 +1,152 @@
+{
+  "channelId": "1098747945278517319",
+  "guildId": "1009513269024796834",
+  "id": "1100222207994626118",
+  "createdTimestamp": 1682383815526,
+  "type": 0,
+  "system": false,
+  "content": "",
+  "authorId": "1096382331696185504",
+  "pinned": false,
+  "tts": false,
+  "nonce": null,
+  "embeds": [
+    {
+      "type": "rich",
+      "title": "Raspberry Pi Top",
+      "description": "Currently printing @ 5%.\n1h 35m remaining\n\nStage: Auto bed leveling",
+      "color": 65535,
+      "fields": [
+        {
+          "name": "Print Time",
+          "value": "`Current:` 9:07\n`Estimated:` 1:44:07\n`Finish:` <t:1682390069:R>",
+          "inline": true
+        },
+        {
+          "name": "Progress",
+          "value": "`Percent:` 5%\n`Layer:` 0 / 226\n`Speed:` Standard (100%)",
+          "inline": true
+        },
+        {
+          "name": "Lights",
+          "value": "`Chamber:` on\n`Work:` flashing",
+          "inline": true
+        },
+        {
+          "name": "Temps",
+          "value": "`Bed:` 96°C/95°C\n`Nozzle:` 184°C/140°C\n`Chamber:` 41°C\n`AMS 1:` 42°C",
+          "inline": true
+        },
+        {
+          "name": "Fans",
+          "value": "`Main 1:` 6%\n`Main 2:` 0%\n`Cooling:` 0%\n`Heatbreak:` 15%",
+          "inline": true
+        },
+        {
+          "name": "AMS 1",
+          "value": "`Temp:` 42º C\n`Humidity:` 14%\n`T1:` PLA - #E05028FF\n`T2:` PLA - #161616FF\n`T3:` ASA - #FFFFFFFF\n`T4:` ASA - #2850E0FF",
+          "inline": true
+        },
+        {
+          "name": "Errors",
+          "value": "`1:` [The Micro Lidar lens is dirty, possibly due to dirt, oil, or organic vapor (such as ABS vapor) on the lens. Dirty lens reduces the resolution and contrast of the observed images and should be cleaned.](https://wiki.bambulab.com/en/x1/troubleshooting/hmscode/0c00_0100_0001_0004)",
+          "inline": false
+        }
+      ],
+      "author": {
+        "name": "Harbinger",
+        "icon_url": "https://i.imgur.com/ihea7uv.jpg",
+        "proxy_icon_url": "https://images-ext-1.discordapp.net/external/B0vse90OnfxSoAtWY9bkx56wDkmn1H2NKmbOoaVtulU/https/i.imgur.com/ihea7uv.jpg"
+      },
+      "image": {
+        "url": "https://cdn.discordapp.com/attachments/1098747945278517319/1100224217745723402/latest-thumbnail-10624992_10624993-988178280000.jpg",
+        "proxy_url": "https://media.discordapp.net/attachments/1098747945278517319/1100224217745723402/latest-thumbnail-10624992_10624993-988178280000.jpg",
+        "width": 432,
+        "height": 480
+      },
+      "thumbnail": {
+        "url": "https://cdn.discordapp.com/attachments/1098747945278517319/1100224217355649174/plate_2.png",
+        "proxy_url": "https://media.discordapp.net/attachments/1098747945278517319/1100224217355649174/plate_2.png",
+        "width": 512,
+        "height": 512
+      },
+      "footer": {
+        "text": "Current Filament - AMS #1 - Tray #4 - #2850e0",
+        "icon_url": "https://place-hold.it/128x128/2850e0",
+        "proxy_icon_url": "https://images-ext-2.discordapp.net/external/PdmCEmF-QOEO4TSq9f09P2wPQqMrqe4uWg0vpZxtmXI/https/place-hold.it/128x128/2850e0"
+      }
+    }
+  ],
+  "components": [
+    {
+      "type": 1,
+      "components": [
+        {
+          "type": 2,
+          "style": 2,
+          "emoji": {
+            "name": "⏸️"
+          },
+          "custom_id": "1:toggle-print-status"
+        },
+        {
+          "type": 2,
+          "style": 4,
+          "emoji": {
+            "name": "🛑"
+          },
+          "custom_id": "1:stop-print"
+        },
+        {
+          "type": 2,
+          "style": 1,
+          "label": "Speed",
+          "emoji": {
+            "name": "⬆️"
+          },
+          "custom_id": "1:speed-up"
+        },
+        {
+          "type": 2,
+          "style": 1,
+          "label": "Speed",
+          "emoji": {
+            "name": "⬇️"
+          },
+          "custom_id": "1:slow-down"
+        },
+        {
+          "type": 2,
+          "style": 1,
+          "label": "Toggle",
+          "emoji": {
+            "name": "💡"
+          },
+          "custom_id": "1:toggle-lights"
+        }
+      ]
+    }
+  ],
+  "attachments": [],
+  "stickers": [],
+  "position": null,
+  "roleSubscriptionData": null,
+  "editedTimestamp": 1682384362901,
+  "mentions": {
+    "everyone": false,
+    "users": [],
+    "roles": [],
+    "crosspostedChannels": [],
+    "repliedUser": null,
+    "members": [],
+    "channels": []
+  },
+  "webhookId": null,
+  "groupActivityApplicationId": null,
+  "applicationId": null,
+  "activity": null,
+  "flags": 0,
+  "reference": null,
+  "interaction": null,
+  "cleanContent": ""
+}

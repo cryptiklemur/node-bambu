@@ -44,12 +44,21 @@ export class StatusService {
     const promises: Promise<void | Message<true>>[] = [];
 
     for (const statusMessage of statusMessages) {
-      this.logger.debug(`${statusMessage.type} message found: ${statusMessage.channelId}:${statusMessage.messageId}`);
-      promises.push(this.updateMessage(statusMessage));
-      this.intervals[statusMessage.id] = setInterval(() => this.updateMessage(statusMessage), 5 * 1000);
+      promises.push(this.addMessage(statusMessage));
     }
 
     await Promise.all(promises);
+  }
+
+  public async addMessage(statusMessage: StatusMessage) {
+    this.logger.debug(
+      'StatusService: %s message found %s:%s',
+      statusMessage.type,
+      statusMessage.channelId,
+      statusMessage.messageId,
+    );
+    this.intervals[statusMessage.id] = setInterval(() => this.updateMessage(statusMessage), 5 * 1000);
+    await this.updateMessage(statusMessage);
   }
 
   public async sendStatusMessage(type: MessageType, contextOrChannel: CommandContext | TextChannel) {
@@ -356,20 +365,26 @@ ${ams.trays
     const printer = this.bambuRepository.findByStatus(status);
 
     if (!printer) {
+      if (status.type === 'permanent') {
+        return;
+      }
+
       return this.removeStatus(status);
     }
 
     let job = printer.client.printerStatus.currentJob;
 
-    this.logger.silly?.(`Updating status message`, {
+    this.logger.debug(`StatusService: Updating status message`, {
       printer: status.printer.name,
       type: status.type,
-      channel: status.channelId,
-      message: status.messageId,
+      channelId: status.channelId,
+      messageId: status.messageId,
     });
 
     if (!job) {
-      await this.removeStatus(status);
+      if (status.type !== 'permanent') {
+        await this.removeStatus(status);
+      }
 
       if (status.type === 'semi-permanent') {
         job = printer.client.printerStatus.lastJob;
@@ -407,10 +422,6 @@ ${ams.trays
   }
 
   private async removeStatus(status: StatusMessage) {
-    if (status.type === 'permanent') {
-      return;
-    }
-
     clearInterval(this.intervals[status.id]);
     // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
     delete this.intervals[status.id];

@@ -67,14 +67,16 @@ export class SubscriptionService {
       files: await this.statusService.buildFiles(job),
     });
 
-    await this.database.manager.save(
-      new StatusMessage({
-        channelId: subscription.channelId,
-        messageId: message.id,
-        createdBy: subscription.createdBy,
-        type: 'subscription',
-        printer: printer.printer,
-      }),
+    await this.statusService.addMessage(
+      await this.database.manager.save(
+        new StatusMessage({
+          channelId: subscription.channelId,
+          messageId: message.id,
+          createdBy: subscription.createdBy,
+          type: 'subscription',
+          printer: printer.printer,
+        }),
+      ),
     );
   }
 }

@@ -3,14 +3,18 @@
   "license": "MIT",
   "scripts": {
     "nx": "nx",
+    "preinstall": "npx only-allow npm",
     "prepare": "husky install"
   },
   "dependencies": {
+    "@discordjs/builders": "^1.6.3",
+    "@discordjs/rest": "^1.7.1",
+    "@discordjs/util": "^0.3.1",
     "@fastify/autoload": "^5.7.1",
     "@fastify/sensible": "^5.2.0",
     "@swc/helpers": "^0.5.0",
     "debug": "^4.3.4",
-    "discord.js": "^14.9.0",
+    "discord.js": "^14.10.2",
     "eventemitter3": "^5.0.0",
     "fastify": "^4.13.0",
     "fastify-plugin": "^4.5.0",
@@ -18,12 +22,12 @@
     "slash-create": "^5.11.0"
   },
   "devDependencies": {
-    "@nrwl/esbuild": "^15.9.2",
-    "@nrwl/eslint-plugin-nx": "^15.9.2",
-    "@nrwl/js": "^15.9.2",
-    "@nrwl/linter": "^15.9.2",
-    "@nrwl/node": "^15.9.2",
-    "@nrwl/workspace": "^15.9.2",
+    "@nrwl/esbuild": "^16.0.3",
+    "@nrwl/eslint-plugin-nx": "^16.0.3",
+    "@nrwl/js": "^16.0.3",
+    "@nrwl/linter": "^16.0.3",
+    "@nrwl/node": "^16.0.3",
+    "@nrwl/workspace": "^16.0.3",
     "@swc/cli": "^0.1.62",
     "@swc/core": "^1.3.49",
     "@types/debug": "^4.1.7",
@@ -37,6 +41,7 @@
     "eslint": "^8.38.0",
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-typescript-sort-keys": "^2.3.0",
     "eslint-plugin-unicorn": "^46.0.0",
     "eslint-plugin-unused-imports": "^2.0.0",
@@ -45,11 +50,14 @@
     "lint-staged": "^13.2.1",
     "mongo": "^0.1.0",
     "mongodb": "^5.2.0",
-    "nx": "^15.9.2",
+    "ms": "^2.1.3",
+    "nx": "^16.0.3",
+    "pm2": "^5.3.0",
     "prettier": "^2.8.7",
     "syncpack": "^9.8.4",
     "tslib": "^2.5.0",
     "tsx": "^3.12.6",
+    "typeorm-logger-adaptor": "^1.1.0",
     "typescript": "^5.0.4",
     "winston": "^3.8.2"
   },
@@ -64,7 +72,7 @@
       "nx format:write --files"
     ]
   },
-  "packageManager": "yarn@3.5.0",
+  "packageManager": "pnpm@8.3.1",
   "private": true,
   "syncpack": {
     "sortFirst": [
@@ -79,6 +87,8 @@
     "indent": "  "
   },
   "workspaces": [
-    "packages/*"
+    "packages/core",
+    "packages/discord",
+    "packages/twitch"
   ]
 }

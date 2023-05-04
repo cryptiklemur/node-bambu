@@ -18,3 +18,5 @@
 
 - Attach the files to the status messages better
   - Only attach files if they need to
+
+- Set up .env.dist for testing

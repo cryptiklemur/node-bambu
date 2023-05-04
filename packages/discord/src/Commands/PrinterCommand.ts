@@ -2,13 +2,14 @@ import { inject, injectable } from 'inversify';
 import { DataSource } from 'typeorm';
 import type { AutocompleteContext, CommandContext } from 'slash-create';
 import { CommandOptionType, SlashCommandOptions, SlashCreator } from 'slash-create';
+import { EmbedBuilder } from 'discord.js';
 
-import { AbstractCommand } from './AbstractCommand';
 import { BambuRepository } from '../Repository/BambuRepository';
 import { Printer } from '../Entity/Printer';
+import { AbstractPrinterCommand } from './AbstractPrinterCommand';
 
 @injectable()
-export class PrinterCommand extends AbstractCommand {
+export class PrinterCommand extends AbstractPrinterCommand {
   protected override requiresPrinter = false;
 
   constructor(
@@ -93,16 +94,30 @@ export class PrinterCommand extends AbstractCommand {
           description: "Lists all the printer's this bot manages",
           type: CommandOptionType.SUB_COMMAND,
         },
+        {
+          name: 'get',
+          description: 'Gets more information on a specific printer',
+          type: CommandOptionType.SUB_COMMAND,
+          options: [
+            {
+              name: 'name',
+              description: 'Name of the printer',
+              type: CommandOptionType.STRING,
+              autocomplete: true,
+              required: true,
+            },
+          ],
+        },
       ],
     });
   }
 
   public override async autocomplete(context: AutocompleteContext) {
-    if (context.subcommands[0] !== 'remove') {
+    if (context.subcommands[0] !== 'remove' && context.subcommands[0] !== 'get') {
       return super.autocomplete(context);
     }
 
-    const focused = context.options['remove'][context.focused];
+    const focused = context.options[context.subcommands[0]][context.focused];
     const printers = await this.database
       .getRepository(Printer)
       .createQueryBuilder('printer')
@@ -160,8 +175,34 @@ export class PrinterCommand extends AbstractCommand {
         return context.send('Printer removed', { ephemeral: true });
       }
 
+      case 'get': {
+        const printer = await this.database
+          .getRepository(Printer)
+          .findOneBy({ owners: owner, name: context.options['get'].name });
+
+        if (!printer) {
+          return context.send("Couldn't find a printer matching that request");
+        }
+
+        return context.send({
+          embeds: [
+            EmbedBuilder.from({
+              author: {
+                name: printer.name,
+                icon_url: printer.iconUrl,
+              },
+              fields: Object.entries(printer).map(([key, value]) => ({
+                name: key,
+                value: Array.isArray(value) ? value.map((x) => x.toString()).join(',') : value.toString(),
+                inline: true,
+              })),
+            }).toJSON(),
+          ],
+          ephemeral: true,
+        });
+      }
       case 'list': {
-        const printers = await this.database.getRepository(Printer).findBy({ owners: [owner] });
+        const printers = await this.database.getRepository(Printer).findBy({ owners: owner });
 
         return context.send(
           printers

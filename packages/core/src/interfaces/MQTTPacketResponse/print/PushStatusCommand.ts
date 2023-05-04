@@ -70,7 +70,7 @@ export interface PushStatusCommand extends PrintMessageCommand {
   gcode_file: `${string}.gcode`;
   gcode_file_prepare_percent: StringRange<0, 100>;
   gcode_start_time: StringNumber;
-  gcode_state: 'PREPARE' | 'RUNNING' | 'PAUSE' | 'FINISH';
+  gcode_state: 'PREPARE' | 'RUNNING' | 'PAUSE' | 'FINISH' | 'IDLE';
   heatbreak_fan_speed: StringRange<0, 100>;
   hms: HMS[];
   home_flag: number;

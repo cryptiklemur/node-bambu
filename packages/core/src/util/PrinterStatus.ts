@@ -120,6 +120,10 @@ export class PrinterStatus {
           return;
         }
 
+        if (data.gcode_state === 'IDLE') {
+          return;
+        }
+
         this.currentJob = new Job(data, this._amsData);
         this.bambu.emit('print:update', this.currentJob);
 

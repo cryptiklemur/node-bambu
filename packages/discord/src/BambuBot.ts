@@ -1,4 +1,4 @@
-import { Client, GatewayDispatchEvents } from 'discord.js';
+import { Client, GatewayDispatchEvents, GatewayIntentBits } from 'discord.js';
 import { GatewayServer, SlashCreator } from 'slash-create';
 import type { interfaces } from '@node-bambu/core';
 import { ConsoleLogger } from '@node-bambu/core';
@@ -15,12 +15,14 @@ import { BambuRepository } from './Repository/BambuRepository';
 // eslint-disable-next-line import/order
 import Context = inversifyInterfaces.Context;
 
-import { Commands } from './Commands';
+import { Commands, PingCommand } from './Commands';
 import { StatusService } from './Service/StatusService';
 import { MessageSenderService } from './Service/MessageSenderService';
 import { InteractionHandler } from './Service/InteractionHandler';
 import { SubscriptionService } from './Service/SubscriptionService';
 import { Owner } from './Entity/Owner';
+import { Queue } from './Entity/Queue';
+import { QueueItem } from './Entity/QueueItem';
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 export type BambuBotDataSourceOptions = Omit<DataSourceOptions, 'entities'> & { entities?: Function[] };
@@ -50,10 +52,11 @@ export class BambuBot {
   public async start() {
     this.container.get('service.interactionHandler');
     await this.container.get<DataSource>('database').initialize();
-    await this.container.get<SlashCreator>('discord.slash-creator').syncCommandsAsync();
-
+    await this.container.getAsync<Client>('discord.client');
+    await this.container
+      .get<SlashCreator>('discord.slash-creator')
+      .syncCommandsAsync({ syncPermissions: false, deleteCommands: true, syncGuilds: true, skipGuildErrors: false });
     await this.container.get<BambuRepository>('repository.bambu').initialize();
-
     await this.container.get<StatusService>('service.status').initialize();
     await this.container.get<SubscriptionService>('service.subscription').initialize();
   }
@@ -68,10 +71,12 @@ export class BambuBot {
       this.container.bind('logger').toConstantValue(new ConsoleLogger());
     }
 
+    this.logger = this.container.get('logger');
+
     this.container.bind<BambuRepository>('repository.bambu').to(BambuRepository);
     this.container
       .bind<Client>('discord.client')
-      .toDynamicValue(() => new Client({ intents: [] }))
+      .toDynamicValue(() => new Client({ intents: [GatewayIntentBits.Guilds] }))
       .onActivation((context, client) => {
         client
           .on('ready', () => context.container.get<interfaces.Logger>('logger').info('Discord client connected'))
@@ -121,16 +126,25 @@ export class BambuBot {
     this.container
       .get<SlashCreator>('discord.slash-creator')
       .withServer(
-        new GatewayServer((handler) =>
-          this.container.get<Client>('discord.client').ws.on(GatewayDispatchEvents.InteractionCreate, handler),
-        ),
+        new GatewayServer((handler) => {
+          this.container.get<Client>('discord.client').ws.on(GatewayDispatchEvents.InteractionCreate, handler);
+          // this.container.get<Client>('discord.client').ws.on(GatewayDispatchEvents.InteractionCreate, console.log);
+        }),
       )
-      .registerCommands(this.container.getAll('discord.slash-command'));
+      .registerCommands(this.container.getAll('discord.slash-command'), false)
+      .registerCommand(PingCommand);
   }
 
   private getDataSource(context: Context): DataSource {
     const userConfig = context.container.get<BambuBotConfiguration>('config').database;
-    const entities: BambuBotDataSourceOptions['entities'] = [Printer, StatusMessage, Subscription, Owner];
+    const entities: BambuBotDataSourceOptions['entities'] = [
+      Printer,
+      StatusMessage,
+      Subscription,
+      Queue,
+      QueueItem,
+      Owner,
+    ];
     const config = userConfig
       ? {
           ...userConfig,
@@ -141,7 +155,6 @@ export class BambuBot {
           database: 'bambu-bot.db',
           entities,
           logging: this.config.debug,
-          logger: this.logger,
           synchronize: true,
         };
 

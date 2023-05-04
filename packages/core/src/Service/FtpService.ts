@@ -1,9 +1,9 @@
-import path from 'node:path';
+import * as path from 'node:path';
 import * as process from 'node:process';
 import * as fs from 'node:fs';
 import * as fsp from 'node:fs/promises';
 
-import JSZip from 'JSZip';
+import JSZip from 'jszip';
 import type ftp from 'basic-ftp';
 import { FTPError } from 'basic-ftp';
 import { Mutex } from 'async-mutex';
@@ -76,6 +76,10 @@ export class FtpService {
           this.connecting = false;
 
           return x;
+        })
+        .catch((error) => {
+          this.logger.error('Failed to connect to FTP server.');
+          this.logger.error(error.message);
         }),
     );
   }
@@ -93,6 +97,7 @@ export class FtpService {
   private async tryFetchLatestThumbnail(job: Job): Promise<void> {
     try {
       if (this.ftp.closed) {
+        await sleep(5000);
         await this.connect();
 
         return this.tryFetchLatestThumbnail(job);
@@ -111,17 +116,20 @@ export class FtpService {
 
       job.updateThumbnail(path.resolve(this.tempDir, fileName));
     } catch (error) {
-      this.logger.error('Failed to fetch last thumbnail', { error });
+      this.logger.error('Failed to fetch last thumbnail', { error: error.message });
     }
   }
 
   private async tryFetch3MF(job: Job): Promise<void> {
-    if (job.status.printType === 'local') {
+    if (job.status.printType === 'local' || job.status.state === 'IDLE') {
       return;
     }
 
     try {
+      await sleep(30 * 1000);
+
       if (this.ftp.closed) {
+        await sleep(5000);
         await this.connect();
 
         return this.tryFetch3MF(job);
@@ -140,13 +148,12 @@ export class FtpService {
       return;
     } catch (error) {
       if (error instanceof FTPError && error.code === 550) {
-        this.logger.error("This print doesn't seem to have a 3mf file");
+        this.logger.error("This print doesn't seem to have a 3mf file", { error: error.message });
 
         return;
       }
 
-      this.logger.error('Failed to download file. Trying again in 5 seconds.', { error });
-      await sleep(5000);
+      this.logger.error('Failed to download file. Trying again in 5 seconds.', { error: error.message });
 
       return this.tryFetch3MF(job);
     }

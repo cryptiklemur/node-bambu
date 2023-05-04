@@ -1,16 +1,16 @@
 {
   "root": true,
   "extends": [
-    "prettier",
     "plugin:@typescript-eslint/recommended",
     "plugin:@typescript-eslint/strict",
     "plugin:import/errors",
     "plugin:import/warnings",
     "plugin:import/typescript",
-    "plugin:unicorn/recommended"
+    "plugin:unicorn/recommended",
+    "plugin:prettier/recommended"
   ],
   "ignorePatterns": ["**/*"],
-  "plugins": ["@nrwl/nx", "import", "unused-imports"],
+  "plugins": ["@nrwl/nx", "import", "unused-imports", "prettier"],
   "settings": {
     "import/resolver": {
       "node": {

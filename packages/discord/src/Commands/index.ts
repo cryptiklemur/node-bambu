@@ -9,14 +9,17 @@ import { StateCommand } from './StateCommand';
 import { LightCommand } from './LightCommand';
 import { FanCommand } from './FanCommand';
 import { VersionCommand } from './VersionCommand';
+import { QueueCommand } from './QueueCommand';
 
-export { AbstractCommand } from './AbstractCommand';
+export { AbstractPrinterCommand } from './AbstractPrinterCommand';
 export { BaseStatusCommand } from './BaseStatusCommand';
 
 export { FanCommand } from './FanCommand';
 export { LightCommand } from './LightCommand';
 export { PermanentStatusCommand } from './PermanentStatusCommand';
+export { PingCommand } from './PingCommand';
 export { PrinterCommand } from './PrinterCommand';
+export { QueueCommand } from './QueueCommand';
 export { SpeedCommand } from './SpeedCommand';
 export { StateCommand } from './StateCommand';
 export { StatusCommand } from './StatusCommand';
@@ -30,6 +33,7 @@ export const Commands = [
   LightCommand,
   PermanentStatusCommand,
   PrinterCommand,
+  QueueCommand,
   SpeedCommand,
   StateCommand,
   StatusCommand,

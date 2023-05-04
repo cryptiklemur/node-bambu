@@ -96,7 +96,7 @@ export class StatusService {
       new StatusMessage({
         channelId: message.channelId,
         messageId: message.id,
-        createdBy: contextOrChannel instanceof CommandContext ? owner : undefined,
+        createdBy: contextOrChannel instanceof CommandContext && owner ? owner : undefined,
         type,
         printer: printer.printer,
       }),
@@ -338,7 +338,7 @@ ${ams.trays
     return toJson ? (files.map((x) => x.toJSON()) as Attachment[]) : files;
   }
 
-  public async getOwner(contextOrChannel: CommandContext | TextChannel) {
+  public async getOwner(contextOrChannel: CommandContext | TextChannel): Promise<Owner | undefined> {
     if (contextOrChannel instanceof CommandContext) {
       const owner = await this.database.getRepository(Owner).findOneBy({ id: contextOrChannel.user.id });
 
@@ -379,6 +379,7 @@ ${ams.trays
       type: status.type,
       channelId: status.channelId,
       messageId: status.messageId,
+      job: job?.id,
     });
 
     if (!job) {
@@ -426,7 +427,7 @@ ${ams.trays
     // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
     delete this.intervals[status.id];
 
-    await this.database.manager.remove(status);
+    await this.database.manager.remove(status).catch(this.logger.error);
   }
 
   private async getPrinter(contextOrChannel: CommandContext | TextChannel): Promise<BambuRepositoryItem | undefined> {

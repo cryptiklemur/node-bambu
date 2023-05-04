@@ -5,7 +5,7 @@ export async function getAuthorizationCode(
   redirectUri: string,
   port = Number.parseInt(process.env['PORT'] ?? '3000', 10),
 ): Promise<string> {
-  return new Promise((resolve, reject) => {
+  return new Promise<string>((resolve, reject) => {
     const server = http.createServer(async (request, result) => {
       const url = new URL(request.url ?? '', `http://${request.headers.host}`);
 

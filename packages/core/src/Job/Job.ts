@@ -1,4 +1,4 @@
-import type JSZip from 'JSZip';
+import type JSZip from 'jszip';
 
 import type { PushStatusCommand } from '../interfaces/MQTTPacketResponse/print';
 import type { Status } from '../interfaces';

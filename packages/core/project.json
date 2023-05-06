@@ -15,13 +15,6 @@
         "generateLockfile": true
       }
     },
-    "publish": {
-      "executor": "nx:run-commands",
-      "options": {
-        "commands": ["node tools/scripts/publish.js @node-bambu/core {args.ver} {args.tag}"]
-      },
-      "dependsOn": ["build"]
-    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],

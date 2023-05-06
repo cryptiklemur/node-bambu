@@ -8,20 +8,18 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@discordjs/builders": "^1.6.3",
-    "@discordjs/rest": "^1.7.1",
-    "@discordjs/util": "^0.3.1",
     "@node-bambu/core": "*",
-    "axios": "^1.3.6",
     "better-sqlite3": "^8.3.0",
     "dayjs": "^1.11.7",
-    "discord.js": "^14.10.2",
-    "fast-deep-equal": "^3.1.3",
+    "discord.js": "^14.10.3-dev.1683331730-e627468.0",
     "inversify": "^6.0.1",
     "pretty-ms": "^8.0.0",
     "reflect-metadata": "^0.1.13",
     "slash-create": "^5.11.0",
     "typeorm": "^0.3.15"
+  },
+  "devDependencies": {
+    "winston": "^3.8.2"
   },
   "files": [
     "src/index.ts",

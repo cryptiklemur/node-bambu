@@ -13,7 +13,7 @@ export class QueueItem {
   public name: string;
 
   @Column('text', { nullable: true })
-  public description: string;
+  public description: string | undefined;
 
   @Column('text', { nullable: true })
   public link: string | undefined;

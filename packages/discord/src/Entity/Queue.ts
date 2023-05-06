@@ -24,7 +24,7 @@ export class Queue {
   @Column('text')
   public description: string;
 
-  @OneToMany(() => QueueItem, (item) => item.queue, { eager: true })
+  @OneToMany(() => QueueItem, (item) => item.queue, { eager: true, cascade: ['remove'] })
   public items: QueueItem[] | undefined;
 
   @Column('varchar', { nullable: true })

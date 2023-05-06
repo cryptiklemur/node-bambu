@@ -116,7 +116,7 @@ export class FtpService {
 
       job.updateThumbnail(path.resolve(this.tempDir, fileName));
     } catch (error) {
-      this.logger.error('Failed to fetch last thumbnail', { error: error.message });
+      this.logger.error('Failed to fetch last thumbnail', { error: (error as Error).message });
     }
   }
 
@@ -153,7 +153,7 @@ export class FtpService {
         return;
       }
 
-      this.logger.error('Failed to download file. Trying again in 5 seconds.', { error: error.message });
+      this.logger.error('Failed to download file. Trying again in 5 seconds.', { error: (error as Error).message });
 
       return this.tryFetch3MF(job);
     }

@@ -14,13 +14,6 @@
         "assets": ["packages/discord/*.md"]
       }
     },
-    "publish": {
-      "executor": "nx:run-commands",
-      "options": {
-        "commands": ["node tools/scripts/publish.js @node-bambu/discord {args.ver} {args.tag}"]
-      },
-      "dependsOn": ["build"]
-    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],

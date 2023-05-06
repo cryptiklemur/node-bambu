@@ -20,7 +20,7 @@
       "@node-bambu/discord-bambu": ["packages/discord-bambu/src/index.ts"],
       "@node-bambu/node-bambu": ["packages/node-bambu/src/index.ts"],
       "@node-bambu/twitch": ["packages/twitch/twitch/src/index.ts"]
-    },
+    }
   },
   "exclude": ["node_modules", "tmp"]
 }

@@ -17,6 +17,9 @@
 - Mention owners when there is a new HMS error for them
 
 - Attach the files to the status messages better
+
   - Only attach files if they need to
 
 - Set up .env.dist for testing
+
+- Allow auto-resume for build-plate marker not being found

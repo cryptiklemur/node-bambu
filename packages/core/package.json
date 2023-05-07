@@ -20,6 +20,7 @@
   "devDependencies": {
     "@types/xml2js": "^0.4.11"
   },
+  "gitHead": "56a05699fcb8b45be23a19554eda1b81fc39f3e9",
   "main": "./src/index.ts",
   "publishConfig": {
     "access": "public"

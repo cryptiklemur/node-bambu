@@ -132,6 +132,10 @@ export class PrinterStatus {
     }
   }
 
+  /**
+   * @todo Add bed leveling data
+   * @param data
+   */
   public async onPushInfo(data: CleanPushInfoCommand): Promise<void> {
     switch (data.category) {
       case 'AMS': {

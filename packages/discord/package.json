@@ -1,14 +1,14 @@
 {
   "name": "@node-bambu/discord",
   "description": "Discord bot for Bambu Lab printers",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "author": {
     "name": "Aaron Scherer",
     "email": "aequasi@gmail.com"
   },
   "license": "MIT",
   "dependencies": {
-    "@node-bambu/core": "^0.5.0",
+    "@node-bambu/core": "^0.5.1",
     "better-sqlite3": "^8.3.0",
     "dayjs": "^1.11.7",
     "discord.js": "^14.10.3-dev.1683331730-e627468.0",

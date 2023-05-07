@@ -1,0 +1,19 @@
+{
+  "name": "@node-bambu/bot",
+  "description": "Bot for Bambu Lab printers (Discord and Twitch)",
+  "version": "0.0.1",
+  "author": {
+    "name": "Aaron Scherer",
+    "email": "aequasi@gmail.com"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@node-bambu/discord": "*",
+    "@node-bambu/twitch": "*",
+    "dotenv": "^16.0.3",
+    "winston": "^3.8.2"
+  },
+  "private": true,
+  "repository": "aequasi/node-bambu/tree/main/apps/bot",
+  "type": "commonjs"
+}

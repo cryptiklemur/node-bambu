@@ -13,8 +13,10 @@ export class InteractionHandler {
     @inject('discord.client') private discord: Client,
     @inject('repository.bambu') private bambuRepository: BambuRepository,
     @inject('logger') private logger: interfaces.Logger,
-  ) {
-    discord.on('interactionCreate', this.onComponentInteraction.bind(this));
+  ) {}
+
+  public async initialize() {
+    this.discord.on('interactionCreate', this.onComponentInteraction.bind(this));
   }
 
   private async onComponentInteraction(interaction: Interaction) {

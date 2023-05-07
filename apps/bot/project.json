@@ -1,0 +1,38 @@
+{
+  "name": "@node-bambu/bot",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/bot/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:swc",
+      "outputs": ["{options.outputPath}"],
+      "dependsOn": ["@node-bambu/core:build", "@node-bambu/discord:build", "@node-bambu/twitch:build"],
+      "options": {
+        "outputPath": "dist/apps/bot",
+        "main": "apps/bot/src/main.ts",
+        "tsConfig": "apps/bot/tsconfig.app.json",
+        "assets": ["apps/bot/*.md"]
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["@node-bambu/core:build", "@node-bambu/discord:build", "@node-bambu/twitch:build"],
+      "options": {
+        "command": "tsx watch apps/bot/src/main.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["apps/bot/**/*.ts"]
+      }
+    },
+    "docker-build": {
+      "dependsOn": ["build"],
+      "command": "docker build -f apps/bot/Dockerfile . -t bot"
+    }
+  },
+  "tags": []
+}

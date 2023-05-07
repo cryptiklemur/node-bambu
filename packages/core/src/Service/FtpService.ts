@@ -13,6 +13,7 @@ import type { BambuClient, BambuConfig } from '../BambuClient';
 import type { Job } from '../Job/Job';
 import type { Logger } from '../interfaces';
 import { sleep } from '../util/sleep';
+import { debounce } from '../util/debounce';
 
 export class FtpService {
   private readonly tempDir: string;
@@ -47,8 +48,14 @@ export class FtpService {
     }
 
     bambu.on('print:start', this.tryFetch3MF.bind(this));
-    bambu.on('print:update', this.tryFetchLatestThumbnail.bind(this));
+    bambu.on('print:update', debounce(this.tryFetchLatestThumbnail.bind(this), 1000));
     bambu.on('print:finish', this.cleanUpTempDir.bind(this));
+
+    setInterval(() => {
+      if (this.ftp.closed) {
+        this.connect();
+      }
+    }, 30 * 1000);
   }
 
   public async connect() {
@@ -97,10 +104,7 @@ export class FtpService {
   private async tryFetchLatestThumbnail(job: Job): Promise<void> {
     try {
       if (this.ftp.closed) {
-        await sleep(5000);
-        await this.connect();
-
-        return this.tryFetchLatestThumbnail(job);
+        return;
       }
 
       const response = await this.runTask(() => this.ftp.list('/ipcam/thumbnail'));
@@ -116,6 +120,10 @@ export class FtpService {
 
       job.updateThumbnail(path.resolve(this.tempDir, fileName));
     } catch (error) {
+      if (this.ftp.closed) {
+        return;
+      }
+
       this.logger.error('Failed to fetch last thumbnail', { error: (error as Error).message });
     }
   }
@@ -126,7 +134,7 @@ export class FtpService {
     }
 
     try {
-      await sleep(30 * 1000);
+      await sleep(5 * 1000);
 
       if (this.ftp.closed) {
         await sleep(5000);

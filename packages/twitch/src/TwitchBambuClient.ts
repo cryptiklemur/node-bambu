@@ -1,8 +1,9 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import type { BambuClient, Job } from '@node-bambu/core';
+import type { BambuClient, Job, interfaces } from '@node-bambu/core';
 import { AxiosError } from 'axios';
+import { ConsoleLogger } from '@node-bambu/core';
 
 import { TwitchAPI } from './Twitch/TwitchApi';
 import { getAuthorizationCode } from './util/getAuthorizationCode';
@@ -12,6 +13,7 @@ import { refreshAccessToken } from './util/refreshAccessToken';
 
 export interface TwitchBambuClientConfig {
   bambuClient: BambuClient;
+  logger?: interfaces.Logger;
   twitch: {
     accessToken: string;
     clientId: string;
@@ -27,6 +29,7 @@ export interface TwitchBambuClientConfig {
 }
 
 export interface TwitchBambuClientPartialConfig extends Omit<TwitchBambuClientConfig, 'twitch'> {
+  logger?: interfaces.Logger;
   port?: number;
   twitch: {
     accessToken?: string;
@@ -97,14 +100,17 @@ export class TwitchBambuClient {
         tokenExpiry,
         ...config.twitch,
       },
+      logger: config.logger,
     });
   }
 
   protected bambuClient: BambuClient;
   protected twitchApi: TwitchAPI;
+  protected logger: interfaces.Logger;
 
   constructor(protected config: TwitchBambuClientConfig) {
     this.bambuClient = config.bambuClient;
+    this.logger = config.logger ?? new ConsoleLogger();
     this.twitchApi = new TwitchAPI(
       this.bambuClient,
       config.twitch.clientId,
@@ -144,12 +150,12 @@ export class TwitchBambuClient {
         `Printing ${job.status.subtaskName} | ${this.twitchApi.getCurrentStatus(job.status)}`;
 
       if (info.title !== newTitle || info.gameId !== gameId.toString()) {
-        console.log('Updating status', { title: newTitle, gameId: gameId.toString(), tags });
+        this.logger.debug('Twitch: Updating status', { title: newTitle, gameId: gameId.toString(), tags });
         this.twitchApi
           .updateStreamInfo(this.config.twitch.userId, { title: newTitle, game_id: gameId.toString(), tags })
           .catch((error) => {
             if (error instanceof AxiosError) {
-              console.error(error.response);
+              this.logger.error('Twitch: Error updating stream info', { error: error.response });
             }
           });
         info.title = newTitle;

@@ -11,5 +11,8 @@
     "@types/tmi.js": "^1.8.3",
     "dotenv": "^16.0.3"
   },
-  "type": "commonjs"
+  "main": "./src/index.ts",
+  "repository": "aequasi/node-bambu/tree/main/packages/twitch",
+  "type": "commonjs",
+  "types": "./src/index.d.ts"
 }

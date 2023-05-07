@@ -14,7 +14,7 @@ export class Subscription {
   @CreateDateColumn()
   public insertDate: Date;
 
-  @ManyToOne(() => Owner, (owner) => owner.subscription)
+  @ManyToOne(() => Owner, (owner) => owner.subscriptions)
   public createdBy: Owner;
 
   @ManyToOne(() => Printer, (printer) => printer.subscriptions, { eager: true })

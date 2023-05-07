@@ -41,6 +41,10 @@ export interface BambuBotConfiguration {
 }
 
 export class BambuBot {
+  public get printers() {
+    return [...this.container.get<BambuRepository>('repository.bambu').values()];
+  }
+
   protected logger: interfaces.Logger;
   protected container: Container;
 
@@ -50,15 +54,40 @@ export class BambuBot {
   }
 
   public async start() {
-    this.container.get('service.interactionHandler');
-    await this.container.get<DataSource>('database').initialize();
-    await this.container.getAsync<Client>('discord.client');
-    await this.container
-      .get<SlashCreator>('discord.slash-creator')
-      .syncCommandsAsync({ syncPermissions: false, deleteCommands: true, syncGuilds: true, skipGuildErrors: false });
-    await this.container.get<BambuRepository>('repository.bambu').initialize();
-    await this.container.get<StatusService>('service.status').initialize();
-    await this.container.get<SubscriptionService>('service.subscription').initialize();
+    const discord = this.container.get<Client>('discord.client');
+
+    await Promise.all([
+      this.container.get<DataSource>('database').initialize(),
+      this.container.get<InteractionHandler>('service.interactionHandler').initialize(),
+    ]).catch((error) => {
+      this.logger.error('Failed to initialize', { services: ['database', 'interactionHandler'], error });
+
+      throw error;
+    });
+    this.logger.info('Services initialized', { services: ['database', 'interactionHandler'] });
+
+    await Promise.all([
+      this.container.get<BambuRepository>('repository.bambu').initialize(),
+      discord.login(this.container.get<BambuBotConfiguration>('config').discord.token),
+      this.container
+        .get<SlashCreator>('discord.slash-creator')
+        .syncCommandsAsync({ syncPermissions: false, deleteCommands: true, syncGuilds: true, skipGuildErrors: false }),
+    ]).catch((error) => {
+      this.logger.error('Failed to initialize', { services: ['bambuRepository', 'discord', 'slash-creator'], error });
+
+      throw error;
+    });
+    this.logger.info('Services initialized', { services: ['bambuRepository', 'discord', 'slash-creator'] });
+
+    await Promise.all([
+      this.container.get<StatusService>('service.status').initialize(),
+      this.container.get<SubscriptionService>('service.subscription').initialize(),
+    ]).catch((error) => {
+      this.logger.error('Failed to initialize', { services: ['status', 'subscription'], error });
+
+      throw error;
+    });
+    this.logger.info('Services initialized', { services: ['status', 'subscription'] });
   }
 
   protected buildContainer() {
@@ -78,9 +107,7 @@ export class BambuBot {
       .bind<Client>('discord.client')
       .toDynamicValue(() => new Client({ intents: [GatewayIntentBits.Guilds] }))
       .onActivation((context, client) => {
-        client
-          .on('ready', () => context.container.get<interfaces.Logger>('logger').info('Discord client connected'))
-          .login(context.container.get<BambuBotConfiguration>('config').discord.token);
+        client.on('ready', () => context.container.get<interfaces.Logger>('logger').info('Discord client connected'));
 
         return client;
       });
@@ -138,12 +165,12 @@ export class BambuBot {
   private getDataSource(context: Context): DataSource {
     const userConfig = context.container.get<BambuBotConfiguration>('config').database;
     const entities: BambuBotDataSourceOptions['entities'] = [
+      Owner,
       Printer,
       StatusMessage,
       Subscription,
-      Queue,
       QueueItem,
-      Owner,
+      Queue,
     ];
     const config = userConfig
       ? {
@@ -154,7 +181,7 @@ export class BambuBot {
           type: 'better-sqlite3',
           database: 'bambu-bot.db',
           entities,
-          logging: this.config.debug,
+          logging: !!this.config.debug,
           synchronize: true,
         };
 

@@ -20,9 +20,11 @@
   "devDependencies": {
     "@types/xml2js": "^0.4.11"
   },
-  "main": "src/index.ts",
+  "main": "./src/index.ts",
   "publishConfig": {
     "access": "public"
   },
-  "repository": "aequasi/node-bambu/tree/main/packages/core"
+  "repository": "aequasi/node-bambu/tree/main/packages/core",
+  "type": "commonjs",
+  "types": "./src/index.d.ts"
 }

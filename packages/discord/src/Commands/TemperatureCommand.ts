@@ -109,8 +109,10 @@ export class TemperatureCommand extends BaseStatusCommand {
 
   private async setTemperature(context: CommandContext, printer: BambuRepositoryItem) {
     const item = context.options['set'].item as 'extruder' | 'bed';
-    const temperature = context.options['set'].temperature as types.IntRange<0, 300>;
+    const temperature = context.options['set'].temperature as types.IntRange<0, 101> | types.IntRange<0, 300>;
 
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-expect-error This is fine
     await printer.client.executeCommand(new Commands.UpdateTemperatureCommand(item, temperature));
 
     return context.send(`Temperature for the ${item} set to ${temperature}°C`);

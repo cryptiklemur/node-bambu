@@ -16,11 +16,22 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@node-bambu/3mf-parser": ["packages/three-mfparser/src/index.ts"],
-      "@node-bambu/discord-bambu": ["packages/discord-bambu/src/index.ts"],
-      "@node-bambu/node-bambu": ["packages/node-bambu/src/index.ts"],
+      "@node-bambu/bot": ["apps/bot/src/main.ts"],
+      "@node-bambu/core": ["packages/core/src/index.ts"],
+      "@node-bambu/discord": ["packages/discord/src/index.ts"],
       "@node-bambu/twitch": ["packages/twitch/twitch/src/index.ts"]
     }
   },
-  "exclude": ["node_modules", "tmp"]
+  "exclude": ["node_modules", "tmp"],
+  "references": [
+    {
+      "path": "../../packages/core"
+    },
+    {
+      "path": "../../packages/discord"
+    },
+    {
+      "path": "../../packages/twitch"
+    }
+  ]
 }

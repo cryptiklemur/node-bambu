@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { load } from 'cheerio';
 
 import type { HMS as RawHMS } from '../../interfaces/MQTTPacketResponse/print';
@@ -42,6 +42,10 @@ async function tryFetchDescription(url: string, code: string): Promise<string> {
       attempts[url]++;
     } else {
       attempts[url] = 1;
+    }
+
+    if (error instanceof AxiosError && error.response?.status === 404) {
+      return fallbacks[code] ?? code;
     }
 
     console.error('Error fetching URL:', (error as Error).message);

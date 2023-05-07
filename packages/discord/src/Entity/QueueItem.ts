@@ -1,7 +1,7 @@
 import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn, Unique } from 'typeorm';
 
 import { Owner } from './Owner';
-import { Queue } from './Queue';
+import { Queue, type Queue as QueueType } from './Queue';
 
 @Entity()
 @Unique('queue-name', ['queue', 'name'])
@@ -19,7 +19,7 @@ export class QueueItem {
   public link: string | undefined;
 
   @ManyToOne(() => Queue, (queue) => queue.items)
-  public queue: Queue;
+  public queue: QueueType;
 
   @Column('boolean', { default: false })
   public printed: boolean;

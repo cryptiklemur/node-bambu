@@ -40,6 +40,7 @@ export class StatusService {
 
   public async initialize() {
     const statusMessages = await this.database.getRepository(StatusMessage).find();
+
     // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
     const promises: Promise<void | Message<true>>[] = [];
 
@@ -222,7 +223,7 @@ export class StatusService {
 \`Humidity:\` ${ams.humidityPercent ?? 'Unknown'}%
 ${ams.trays
   .map((tray, index) => {
-    if (tray === undefined) {
+    if (!tray?.type) {
       return `\`T${index + 1}:\` Empty`;
     }
 
@@ -358,13 +359,9 @@ ${ams.trays
       .fetch({ message: status.messageId, cache: false, force: true })
       .catch(() => {});
 
-    if (!message || !channel) {
-      return this.removeStatus(status);
-    }
-
     const printer = this.bambuRepository.findByStatus(status);
 
-    if (!printer) {
+    if (!printer || !message || !channel) {
       if (status.type === 'permanent') {
         return;
       }

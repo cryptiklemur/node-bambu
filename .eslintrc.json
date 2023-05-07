@@ -154,7 +154,9 @@
       { "cases": { "pascalCase": true, "camelCase": true }, "ignore": ["/getAMSesFromCommand.ts/"] }
     ],
     "@typescript-eslint/no-empty-function": ["error", { "allow": ["arrowFunctions"] }],
-    "unicorn/number-literal-case": "off"
+    "unicorn/number-literal-case": "off",
+    "unicorn/no-useless-undefined": "off",
+    "unicorn/prefer-module": "off"
   },
   "overrides": [
     {

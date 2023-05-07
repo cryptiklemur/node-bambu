@@ -48,6 +48,7 @@ export class BambuRepository extends Map<string, BambuRepositoryItem> {
   }
 
   public async add(printer: Printer) {
+    this.logger.info('Adding printer', { printer });
     this.set(printer.host, { client: await this.createBambuClient(printer), printer });
   }
 

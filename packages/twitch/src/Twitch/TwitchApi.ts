@@ -126,11 +126,11 @@ export class TwitchAPI {
       }
 
       case 'RUNNING': {
-        return `Currently printing @ ${status.progressPercent}%.\n${time} remaining`;
+        return `Currently printing @ ${status.progressPercent}%. ${time} remaining`;
       }
 
       case 'PAUSE': {
-        return `Currently paused @ ${status.progressPercent}%.\n${time} remaining`;
+        return `Currently paused @ ${status.progressPercent}%. ${time} remaining`;
       }
 
       case 'FINISH': {

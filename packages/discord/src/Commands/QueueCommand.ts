@@ -412,10 +412,10 @@ export class QueueCommand extends AbstractCommand {
       }
 
       if (queue.channel && queue.message) {
-        const existingChannel = (await this.client.channels.fetch(queue.channel).catch(() => {})) as
+        const existingChannel = (await this.client.channels.fetch(queue.channel).catch(() => undefined)) as
           | BaseGuildTextChannel
           | undefined;
-        const existingMessage = await existingChannel?.messages.fetch(queue.message).catch(() => {});
+        const existingMessage = await existingChannel?.messages.fetch(queue.message).catch(() => undefined);
 
         await existingMessage?.delete();
       }

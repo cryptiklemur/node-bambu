@@ -11,6 +11,7 @@ import { BambuRepository } from '../Repository/BambuRepository';
 import { MessageSenderService } from './MessageSenderService';
 import { StatusService } from './StatusService';
 import { StatusMessage } from '../Entity/StatusMessage';
+import { MessageBuilder } from './MessageBuilder';
 
 @injectable()
 export class SubscriptionService {
@@ -60,12 +61,10 @@ export class SubscriptionService {
       return;
     }
 
-    const message = await this.messageSender.sendMessage(channel, {
-      content: '',
-      embeds: await this.statusService.buildEmbeds(printer, job),
-      components: this.statusService.buildComponents(printer),
-      files: await this.statusService.buildFiles(job),
-    });
+    const message = await this.messageSender.sendMessage(
+      channel,
+      await MessageBuilder.buildMessage(printer, undefined, job),
+    );
 
     await this.statusService.addMessage(
       await this.database.manager.save(

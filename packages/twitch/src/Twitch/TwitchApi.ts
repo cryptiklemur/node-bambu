@@ -68,7 +68,7 @@ export class TwitchAPI {
 
   public async connect() {
     this.ircClient.on('message', this.onIRCMessage.bind(this));
-    await this.ircClient.connect();
+    await this.ircClient.connect().catch(console.error);
   }
 
   public async updateStreamInfo(userId: number, info: UpdateStreamInformation): Promise<void> {

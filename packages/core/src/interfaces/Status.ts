@@ -31,8 +31,8 @@ export interface AMS extends AMSRawData {
 
 export interface AMSRawData {
   humidityIdx: number;
-  humidityPercent: number;
-  realTemp: number;
+  humidityPercent?: number;
+  realTemp?: number;
 }
 
 export interface HMS {

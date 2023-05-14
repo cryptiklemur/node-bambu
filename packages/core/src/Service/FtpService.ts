@@ -128,13 +128,13 @@ export class FtpService {
     }
   }
 
-  private async tryFetch3MF(job: Job): Promise<void> {
+  private async tryFetch3MF(job: Job, attempt = 0): Promise<void> {
     if (job.status.printType === 'local' || job.status.state === 'IDLE') {
       return;
     }
 
     try {
-      await sleep(5 * 1000);
+      await sleep((attempt + 1) * 5 * 1000);
 
       if (this.ftp.closed) {
         await sleep(5000);
@@ -156,6 +156,10 @@ export class FtpService {
       return;
     } catch (error) {
       if (error instanceof FTPError && error.code === 550) {
+        if (attempt < 5) {
+          return this.tryFetch3MF(job, attempt + 1);
+        }
+
         this.logger.error("This print doesn't seem to have a 3mf file", { error: error.message });
 
         return;

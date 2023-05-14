@@ -31,7 +31,7 @@
     },
     "docker-build": {
       "dependsOn": ["build"],
-      "command": "docker build -f apps/bot/Dockerfile . -t bot"
+      "command": "docker build -f apps/bot/Dockerfile . -t @node-bambu/bot"
     }
   },
   "tags": []

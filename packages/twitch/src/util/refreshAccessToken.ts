@@ -5,8 +5,6 @@ export async function refreshAccessToken(clientId: string, clientSecret: string,
     `https://id.twitch.tv/oauth2/token?grant_type=refresh_token&refresh_token=${refreshToken}&client_id=${clientId}&client_secret=${clientSecret}`,
   );
 
-  console.log(response);
-
   return {
     accessToken: response.data.access_token,
     refreshToken: response.data.refresh_token,

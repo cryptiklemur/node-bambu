@@ -31,7 +31,7 @@
     },
     "docker-build": {
       "dependsOn": ["build"],
-      "command": "docker build -f apps/bot/Dockerfile . -t @node-bambu/bot"
+      "command": "docker build -f apps/bot/Dockerfile --build-arg=BASE_IMAGE=arm64v8/node . -t bot"
     }
   },
   "tags": []

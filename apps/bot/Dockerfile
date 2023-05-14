@@ -4,18 +4,16 @@
 # Tip: Modify "docker-build" options in project.json to change docker build args.
 #
 # Run the container with `docker run -p 3000:3000 -t bot`.
-FROM docker.io/node:lts-alpine
+ARG BASE_IMAGE
+
+FROM $BASE_IMAGE
 
 ENV HOST=0.0.0.0
 ENV PORT=3000
 
 WORKDIR /app
 
-RUN addgroup --system bot && \
-          adduser --system -G bot bot
-
 COPY dist/apps/bot bot
-RUN chown -R bot:bot .
 
 # You can remove this install step if you build with `--bundle` option.
 # The bundled output will include external dependencies.

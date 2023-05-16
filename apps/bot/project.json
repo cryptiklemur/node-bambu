@@ -13,7 +13,7 @@
         "main": "apps/bot/src/index.ts",
         "tsConfig": "apps/bot/tsconfig.app.json",
         "generatePackageJson": true,
-        "bundle": true,
+        "bundle": false,
         "external": ["node_modules/*", "source-map-support"],
         "sourceMap": true,
         "format": ["esm"],

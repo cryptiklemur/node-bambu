@@ -11,6 +11,6 @@ ENV PORT=3000
 
 WORKDIR /app
 
-COPY dist/apps/bot /app
+COPY dist/apps/bot/ /app
 
 CMD [ "node", "index.mjs" ]

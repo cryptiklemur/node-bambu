@@ -11,6 +11,7 @@
     "@node-bambu/discord": "^0.5.1",
     "@node-bambu/twitch": "^0.5.1",
     "dotenv": "^16.0.3",
+    "source-map-support": "^0.5.21",
     "winston": "^3.8.2"
   },
   "private": true,

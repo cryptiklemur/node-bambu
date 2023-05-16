@@ -37,7 +37,7 @@ export default fp(
 
     await fastify.discord.start();
 
-    if (process.env.TWITCH_CLIENT_ID && process.env.TWITCH_CLIENT_SECRET) {
+    if (process.env.TWITCH_CLIENT_ID && process.env.TWITCH_CLIENT_SECRET && fastify.discord.printers.length > 0) {
       fastify.decorate(
         'twitch',
         await TwitchBambuClient.create({

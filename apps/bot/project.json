@@ -5,14 +5,22 @@
   "projectType": "application",
   "targets": {
     "build": {
-      "executor": "@nrwl/js:swc",
+      "executor": "@nrwl/esbuild:esbuild",
       "outputs": ["{options.outputPath}"],
       "dependsOn": ["@node-bambu/core:build", "@node-bambu/discord:build", "@node-bambu/twitch:build"],
       "options": {
         "outputPath": "dist/apps/bot",
         "main": "apps/bot/src/main.ts",
         "tsConfig": "apps/bot/tsconfig.app.json",
-        "assets": ["apps/bot/*.md"]
+        "generatePackageJson": false,
+        "sourceMap": true,
+        "format": ["esm"],
+        "esbuildOptions": {
+          "sourcemap": true,
+          "outExtension": {
+            ".js": ".mjs"
+          }
+        }
       }
     },
     "serve": {
@@ -31,7 +39,7 @@
     },
     "docker-build": {
       "dependsOn": ["build"],
-      "command": "docker build -f apps/bot/Dockerfile --build-arg=BASE_IMAGE=arm64v8/node . -t bot"
+      "command": "docker build -f apps/bot/Dockerfile . -t bot"
     }
   },
   "tags": []

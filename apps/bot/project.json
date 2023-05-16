@@ -12,7 +12,8 @@
         "outputPath": "dist/apps/bot",
         "main": "apps/bot/src/index.ts",
         "tsConfig": "apps/bot/tsconfig.app.json",
-        "generatePackageJson": false,
+        "generatePackageJson": true,
+        "bundle": true,
         "sourceMap": true,
         "format": ["esm"],
         "esbuildOptions": {

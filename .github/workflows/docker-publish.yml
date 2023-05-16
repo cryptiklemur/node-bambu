@@ -32,7 +32,6 @@ jobs:
     strategy:
       matrix:
         project: [bot]
-        base_image: ['arm64v8/node', 'node:lts-alpine']
 
     steps:
       - name: Checkout repository
@@ -81,8 +80,7 @@ jobs:
             type=semver,pattern={{major}}
             type=ref,event=branch
             type=ref,event=pr
-            type=sha,
-            type=raw,${{ matrix.base_image }}
+            type=sha
 
       - name: Build app
         run: |
@@ -95,13 +93,13 @@ jobs:
         uses: docker/build-push-action@ac9327eae2b366085ac7f6a2d02df8aa8ead720a
         with:
           context: .
+          platforms: linux/amd64,linux/arm64
           file: apps/${{ matrix.project }}/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          build-args: BASE_IMAGE=${{ matrix.base_image }}
 
       # Sign the resulting Docker image digest except on PRs.
       # This will only write to the public Rekor transparency log when the Docker

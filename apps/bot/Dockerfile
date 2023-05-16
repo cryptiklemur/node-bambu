@@ -17,4 +17,4 @@ COPY dist/apps/bot bot
 # The bundled output will include external dependencies.
 RUN npm --prefix bot --omit=dev -f install
 
-CMD [ "node", "bot" ]
+CMD [ "node", "bot/index.mjs" ]

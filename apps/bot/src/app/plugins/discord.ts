@@ -16,7 +16,7 @@ declare module 'fastify' {
   }
 }
 
-const { parsed: environment } = dotenv.config({ path: path.resolve(process.cwd(), '.env.twitch') });
+const { parsed: environment = process.env } = dotenv.config({ path: path.resolve(process.cwd(), '.env.twitch') });
 
 /**
  * This plugin adds the discord bot

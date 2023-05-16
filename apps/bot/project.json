@@ -13,15 +13,12 @@
         "main": "apps/bot/src/index.ts",
         "tsConfig": "apps/bot/tsconfig.app.json",
         "generatePackageJson": true,
-        "bundle": false,
+        "bundle": true,
         "external": ["node_modules/*", "source-map-support"],
         "sourceMap": true,
         "format": ["esm"],
         "esbuildOptions": {
-          "sourcemap": true,
-          "outExtension": {
-            ".js": ".mjs"
-          }
+          "sourcemap": true
         }
       }
     },
@@ -39,9 +36,9 @@
         "lintFilePatterns": ["apps/bot/**/*.ts"]
       }
     },
-    "docker-build": {
+    "docker": {
       "dependsOn": ["build"],
-      "command": "docker build -f apps/bot/Dockerfile . -t bot"
+      "command": "docker build -f apps/bot/Dockerfile . -t node-bambu/bot"
     }
   },
   "tags": []

@@ -16,5 +16,5 @@
   },
   "private": true,
   "repository": "aequasi/node-bambu/tree/main/apps/bot",
-  "type": "commonjs"
+  "type": "module"
 }

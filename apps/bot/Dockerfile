@@ -17,4 +17,4 @@ COPY dist/apps/bot /app
 # The bundled output will include external dependencies.
 RUN npm --omit=dev -f install && npm i source-map-support
 
-CMD [ "node", "-r", "source-map-support/register", "index.mjs" ]
+CMD [ "node", "-r", "source-map-support/register", "index.js" ]

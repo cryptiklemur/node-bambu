@@ -1,8 +1,8 @@
-import * as path from 'node:path';
-
 import type { FastifyInstance } from 'fastify';
-// eslint-disable-next-line import/default
-import AutoLoad from '@fastify/autoload';
+
+import Discord from './plugins/discord';
+import Sensible from './plugins/sensible';
+import Root from './routes/root';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface AppOptions {}
@@ -12,18 +12,8 @@ export async function app(fastify: FastifyInstance, options: AppOptions) {
 
   // Do not touch the following lines
 
-  // This loads all plugins defined in plugins
-  // those should be support plugins that are reused
-  // through your application
-  fastify.register(AutoLoad, {
-    dir: path.join(__dirname, 'plugins'),
-    options: { ...options },
-  });
+  fastify.register(Discord);
+  fastify.register(Sensible);
 
-  // This loads all plugins defined in routes
-  // define your routes in one of these
-  fastify.register(AutoLoad, {
-    dir: path.join(__dirname, 'routes'),
-    options: { ...options },
-  });
+  fastify.register(Root);
 }

@@ -1,4 +1,3 @@
-import 'source-map-support/register';
 import 'dotenv/config';
 import * as util from 'node:util';
 

@@ -32,7 +32,7 @@ jobs:
     strategy:
       matrix:
         project: [bot]
-        base_image: [arm64v8/node, node:lts-alpine]
+        base_image: ['arm64v8/node', 'node:lts-alpine']
 
     steps:
       - name: Checkout repository

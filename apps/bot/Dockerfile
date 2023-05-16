@@ -13,8 +13,4 @@ WORKDIR /app
 
 COPY dist/apps/bot /app
 
-# You can remove this install step if you build with `--bundle` option.
-# The bundled output will include external dependencies.
-RUN npm --prefix bot --omit=dev -f install
-
 CMD [ "node", "index.mjs" ]

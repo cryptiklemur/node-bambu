@@ -14,7 +14,7 @@
         "tsConfig": "apps/bot/tsconfig.app.json",
         "generatePackageJson": true,
         "bundle": true,
-        "external": ["node_modules/*"],
+        "external": ["node_modules/*", "source-map-support"],
         "sourceMap": true,
         "format": ["esm"],
         "esbuildOptions": {

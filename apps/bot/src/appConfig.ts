@@ -43,4 +43,3 @@ export const appConfig: AppConfig = {
   twitch: twitchConfig,
   ...userConfig,
 };
-console.log(appConfig);

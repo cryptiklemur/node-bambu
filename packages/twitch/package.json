@@ -14,6 +14,6 @@
   "gitHead": "56a05699fcb8b45be23a19554eda1b81fc39f3e9",
   "main": "./src/index.ts",
   "repository": "aequasi/node-bambu/tree/main/packages/twitch",
-  "type": "commonjs",
+  "type": "module",
   "types": "./src/index.d.ts"
 }

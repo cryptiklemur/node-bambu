@@ -26,7 +26,7 @@
       "executor": "nx:run-commands",
       "dependsOn": ["@node-bambu/core:build", "@node-bambu/discord:build", "@node-bambu/twitch:build"],
       "options": {
-        "command": "tsx watch apps/bot/src/main.ts"
+        "command": "tsx watch apps/bot/src/index.ts"
       }
     },
     "lint": {

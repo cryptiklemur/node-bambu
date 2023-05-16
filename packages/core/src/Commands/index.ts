@@ -1,5 +1,5 @@
 export { AbstractCommand } from './AbstractCommand';
-export { CommandInterface } from './CommandInterface';
+export type { CommandInterface } from './CommandInterface';
 export { GCodeCommand } from './GCodeCommand';
 export { GetVersionCommand } from './GetVersionCommand';
 export { PushAllCommand } from './PushAllCommand';

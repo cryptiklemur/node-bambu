@@ -33,6 +33,6 @@
     "access": "public"
   },
   "repository": "aequasi/node-bambu/tree/main/packages/discord",
-  "type": "commonjs",
+  "type": "module",
   "types": "./src/index.d.ts"
 }

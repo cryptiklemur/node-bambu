@@ -10,7 +10,7 @@
     "esModuleInterop": true,
     "importHelpers": true,
     "target": "es2020",
-    "module": "commonjs",
+    "module": "esnext",
     "lib": ["ES2022", "ES2021", "es2017", "dom"],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,

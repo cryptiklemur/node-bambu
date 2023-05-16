@@ -1,3 +1,4 @@
 import 'reflect-metadata';
 
-export { BambuBot, BambuBotConfiguration } from './BambuBot';
+export { BambuBot } from './BambuBot';
+export type { BambuBotConfiguration, BambuBotDataSourceOptions } from './BambuBot';

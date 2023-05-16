@@ -26,6 +26,6 @@
     "access": "public"
   },
   "repository": "aequasi/node-bambu/tree/main/packages/core",
-  "type": "commonjs",
+  "type": "module",
   "types": "./src/index.d.ts"
 }

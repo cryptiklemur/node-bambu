@@ -10,7 +10,7 @@
       "dependsOn": ["@node-bambu/core:build", "@node-bambu/discord:build", "@node-bambu/twitch:build"],
       "options": {
         "outputPath": "dist/apps/bot",
-        "main": "apps/bot/src/main.ts",
+        "main": "apps/bot/src/index.ts",
         "tsConfig": "apps/bot/tsconfig.app.json",
         "generatePackageJson": false,
         "sourceMap": true,

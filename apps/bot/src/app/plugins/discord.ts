@@ -7,7 +7,7 @@ import { BambuBot } from '@node-bambu/discord';
 import { TwitchBambuClient } from '@node-bambu/twitch';
 import type { FastifyInstance } from 'fastify/types/instance';
 
-import { logger } from '../../main';
+import { logger } from '../../';
 
 declare module 'fastify' {
   interface FastifyInstance {

@@ -13,7 +13,7 @@ import { Owner } from './Owner';
 import { QueueItem } from './QueueItem';
 
 @Entity()
-@Unique('name', ['name'])
+@Unique('queue-name', ['name'])
 export class Queue {
   @PrimaryGeneratedColumn('increment')
   public id: number;

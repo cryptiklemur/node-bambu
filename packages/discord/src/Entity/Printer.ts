@@ -16,9 +16,9 @@ import { Subscription } from './Subscription';
 import { Owner } from './Owner';
 
 @Entity()
-@Unique('name', ['name'])
-@Unique('host-and-port', ['host', 'port'])
-@Unique('serialNumber', ['serialNumber'])
+@Unique('printer-name', ['name'])
+@Unique('printer-host-and-port', ['host', 'port'])
+@Unique('printer-serialNumber', ['serialNumber'])
 export class Printer {
   @PrimaryGeneratedColumn('increment')
   public id: number;

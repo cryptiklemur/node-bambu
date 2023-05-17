@@ -15,6 +15,6 @@ COPY dist/apps/bot /app
 
 # You can remove this install step if you build with `--bundle` option.
 # The bundled output will include external dependencies.
-RUN npm --omit=dev -f install && npm i source-map-support pg mysql
+RUN npm --omit=dev -f install && npm i source-map-support
 
 CMD [ "node", "-r", "source-map-support/register", "index.js" ]

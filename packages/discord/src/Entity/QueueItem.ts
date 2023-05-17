@@ -24,7 +24,7 @@ export class QueueItem {
   @Column('boolean', { default: false })
   public printed: boolean;
 
-  @Column('datetime', { nullable: true })
+  @Column('timestamptz', { nullable: true })
   public printedAt: Date | undefined;
 
   @CreateDateColumn()

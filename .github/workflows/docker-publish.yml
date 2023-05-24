@@ -24,7 +24,6 @@ jobs:
     strategy:
       matrix:
         project: [bot]
-        platform: ['linux/amd64', 'linux/arm64']
 
     steps:
       - name: Checkout repository
@@ -81,7 +80,7 @@ jobs:
         uses: docker/build-push-action@ac9327eae2b366085ac7f6a2d02df8aa8ead720a
         with:
           context: .
-          platforms: ${{ matrix.platform }}
+          platforms: linux/amd64,linux/arm64
           file: apps/${{ matrix.project }}/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
